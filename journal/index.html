@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Nothing on this page talks to a server: entries live only in this browser. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="description" content="kjournal: a free, private journal for treatment sessions. Set an intention, reflect after, draw, and track sleep and habits. Entries stay on your device.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="kjournal">
+<meta name="theme-color" content="#fbf8f3" media="(prefers-color-scheme: light)">
+<link rel="icon" type="image/png" sizes="32x32" href="/kjournal-icon-32.png">
+<link rel="icon" type="image/png" sizes="512x512" href="/kjournal-icon-512.png">
+<link rel="apple-touch-icon" href="/kjournal-icon-180.png">
+<link rel="canonical" href="https://kjournal.org/journal/">
+<title>kjournal</title>
+<style>
+
+/* tokens. Text pairs checked for WCAG AA. Gradient start is a deeper orange so white text passes 4.5:1. */
+:root{
+  --ink:#2e2938; --mute:#665f70; --line:#dcdbe2; --line-strong:#b4b0bd; --paper:#fbf8f3; --card:#fffdfa;
+  --o:#c94a22; --r:#c8283f; --p:#662e73; --focus:#1f5f8b; --danger:#b3243a;
+  --fill-habit:#e0582b; --fill-sleep:#662e73;
+  --grad:linear-gradient(90deg,#c94a22,#db2e45 50%,#662e73);
+  --sans:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:1rem/1.45 var(--sans)}
+button,input,textarea{font:inherit;color:inherit}
+a{color:var(--r);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:var(--s4);top:-60px;background:var(--ink);color:#fff;padding:var(--s2) var(--s4);z-index:20;border-radius:10px}
+.skip:focus{top:var(--s4)}
+.wrap{max-width:820px;margin:0 auto;padding:0 var(--s4)}
+main.wrap{padding-bottom:calc(100px + env(safe-area-inset-bottom))}
+
+.mast{background:var(--grad);color:#fff;padding:calc(28px + env(safe-area-inset-top)) 0 26px}
+.mast .rule{display:none}
+.mast h1{margin:0;font-size:clamp(30px,7vw,46px);line-height:1;letter-spacing:-.02em;text-transform:lowercase}
+.mast p{margin:8px 0 0}
+.mast .note{display:inline-block;margin-top:14px;font-size:.85rem;background:rgba(0,0,0,.22);padding:5px 12px;border-radius:99px}
+
+.sec{background:var(--grad);color:#fff;display:flex;justify-content:space-between;align-items:center;gap:var(--s3);padding:10px 14px;margin:26px 0 14px}
+.sec h2{margin:0;font-size:.95rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.sec .eyebrow{color:#fff}
+.eyebrow{font-weight:700;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.lede{color:var(--mute);margin:0 0 var(--s4)}
+
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+.box h3{margin:0;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase}
+.box .hint{color:var(--mute);font-size:.9rem;margin:2px 0 8px}
+.t-int{color:var(--p)} .t-ref{color:var(--r)}
+
+.field{display:grid;grid-template-columns:minmax(8rem,auto) 1fr;align-items:end;gap:12px;margin:12px 0}
+.field label{font-size:.75rem;font-weight:700;letter-spacing:.06em;color:var(--mute);text-transform:uppercase;padding-bottom:6px}
+.field input{border:0;border-bottom:1px solid var(--line-strong);background:none;padding:6px 2px;min-height:44px;font-size:1.05rem;border-radius:0}
+.slider{margin:var(--s4) 0}
+.slider label{display:flex;justify-content:space-between;font-size:.75rem;font-weight:700;letter-spacing:.06em;color:var(--mute);text-transform:uppercase}
+.slider output{font-size:1rem;letter-spacing:0;text-transform:none;color:var(--ink)}
+input[type=range]{width:100%;min-height:44px;accent-color:var(--r)}
+textarea.lined{display:block;width:100%;border:0;resize:vertical;min-height:170px;background:transparent repeating-linear-gradient(transparent 0 31px,var(--line) 31px 32px);line-height:32px;padding:0 2px;font-size:1.05rem}
+textarea.lined:focus-visible{outline-offset:6px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border:1px solid transparent;border-radius:99px;padding:0 18px;background:var(--ink);color:#fff;font-weight:600;cursor:pointer;text-decoration:none}
+#new{background:var(--grad)}
+.btn.quiet{background:#fff;color:var(--ink);border-color:var(--line-strong)}
+.btn.danger{background:#fff;color:var(--danger);border-color:#e9b8c0}
+.btn[aria-pressed=true]{background:#fdf0ee;border-color:var(--r)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.spacer{flex:1}
+
+.list{list-style:none;margin:12px 0 0;padding:0}
+.list a{display:flex;justify-content:space-between;gap:12px;padding:14px 4px;border-bottom:1px solid var(--line);color:inherit;text-decoration:none;min-height:44px}
+.list .ttl{font-weight:700}
+.list small{color:var(--mute)}
+.empty{color:var(--mute);text-align:center;padding:30px 0}
+
+.pad{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card) radial-gradient(var(--line) 1px,transparent 1.3px) 0 0/18px 18px;touch-action:none}
+.pad canvas{display:block;width:100%;height:420px;touch-action:none}
+.tools{display:flex;gap:6px;align-items:center;margin:8px 0;flex-wrap:wrap}
+.sw{width:44px;height:44px;border-radius:50%;border:0;background:none;display:grid;place-items:center;cursor:pointer;padding:0}
+.sw span{width:26px;height:26px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line-strong)}
+.sw[aria-pressed=true] span{box-shadow:0 0 0 2px var(--ink)}
+
+.gridwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.g{border-collapse:collapse;font-size:.65rem;color:var(--mute);user-select:none;-webkit-user-select:none}
+table.g th,table.g td{border:1px solid var(--line);padding:0;text-align:center;font-weight:400}
+table.g thead th{height:24px;min-width:24px}
+table.g tbody th{padding:0 5px}
+table.g td button{display:block;width:24px;height:24px;border:0;margin:0;padding:0;background:none;cursor:pointer;touch-action:none}
+table.g td button[aria-pressed=true]{background:var(--fill-habit)}
+table.g.sleep td button[aria-pressed=true]{background:var(--fill-sleep)}
+table.g td button:focus-visible{outline-offset:-3px}
+table.g th.name{min-width:130px;border:0;border-bottom:1px solid var(--line);text-align:left}
+table.g th.name input{width:100%;border:0;background:none;font-size:.8rem;padding:2px;min-height:24px;color:var(--ink)}
+.month{display:flex;align-items:center;gap:6px}
+.month .eyebrow{color:#fff}
+.month input{border:0;background:rgba(0,0,0,.2);color:#fff;border-radius:8px;padding:4px 8px;min-height:32px;font-size:.8rem;color-scheme:dark}
+
+ul.tips{list-style:none;padding:0;margin:0}
+ul.tips li{padding:7px 0 7px 22px;position:relative}
+ul.tips li:before{content:"";position:absolute;left:2px;top:14px;width:9px;height:9px;border-radius:50%;background:var(--r)}
+ul.tips b{display:block} ul.tips span{color:var(--mute);font-size:.9rem}
+.themes{list-style:none;padding:0;margin:0;display:flex;flex-wrap:wrap;gap:8px}
+.themes button{border:1px solid var(--line-strong);background:#fff;border-radius:99px;padding:0 14px;min-height:44px;font-size:.9rem;cursor:pointer}
+
+.prose h3{font-size:1.05rem;margin:var(--s5) 0 var(--s2)}
+.prose p,.prose li{max-width:40rem}
+.prose .eff{color:var(--mute);font-size:.9rem}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);z-index:5;padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+nav.tabs ul{display:flex;justify-content:center;gap:2px;max-width:820px;margin:0 auto;padding:0;list-style:none}
+nav.tabs li{flex:1;max-width:150px}
+nav.tabs a{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:10px;font-size:.85rem;color:var(--mute);text-decoration:none}
+nav.tabs a[aria-current=page]{color:var(--r);font-weight:700;background:#fdf0ee}
+
+footer.foot{color:var(--mute);font-size:.85rem;margin-top:40px;border-top:1px solid var(--line);padding-top:14px}
+footer.foot p{margin:0 0 8px}
+footer.foot strong{color:var(--ink)}
+footer.foot nav a{margin-right:var(--s4);display:inline-block;padding:var(--s2) 0}
+
+.toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;padding:8px 14px;border-radius:99px;font-size:.85rem;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+@media print{nav.tabs,.toast,.tools,.skip{display:none}}
+.logo{display:inline-block;margin-bottom:18px;border-radius:11px;box-shadow:0 0 0 2px rgba(255,255,255,.85),0 4px 14px rgba(0,0,0,.18);line-height:0}.logo img{width:40px;height:40px;border-radius:11px;display:block}
+</style>
+</head>
+<body>
+<a class="skip" href="#app">Skip to content</a>
+<header class="mast"><div class="wrap">
+  <a class="logo" href="/" aria-label="kjournal home"><img src="/kjournal-icon-180.png" alt="" width="40" height="40"></a>
+  <div class="rule" aria-hidden="true"></div>
+  <h1>kjournal</h1>
+  <p>a place to land, notice, and come back to yourself</p>
+  <p class="note">Your entries are saved only on this device. Nothing is uploaded.</p>
+</div></header>
+
+<main class="wrap" id="app" tabindex="-1"></main>
+
+<nav class="tabs" aria-label="Journal sections"><ul>
+  <li><a href="#sessions" data-v="sessions">Sessions</a></li>
+  <li><a href="#intent" data-v="intent">Intentions</a></li>
+  <li><a href="#habits" data-v="habits">Habits</a></li>
+  <li><a href="#sleep" data-v="sleep">Sleep</a></li>
+  <li><a href="#more" data-v="more">More</a></li>
+</ul></nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+const UPDATED = "October 28, 2026";
+const OWNER = "GTLLco";
+
+// ---------- storage: IndexedDB in this browser only ----------
+const DB = (() => {
+  let dbp;
+  const open = () => dbp ||= new Promise((res, rej) => {
+    const r = indexedDB.open("session-journal", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("kv");
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+  const tx = async (mode, fn) => { const db = await open(); return new Promise((res, rej) => {
+    const t = db.transaction("kv", mode); const out = fn(t.objectStore("kv"));
+    t.oncomplete = () => res(out && out.result); t.onerror = () => rej(t.error); }); };
+  return {
+    get: k => tx("readonly", s => s.get(k)),
+    set: (k, v) => tx("readwrite", s => s.put(v, k)),
+    del: k => tx("readwrite", s => s.delete(k)),
+    all: async () => { const db = await open(); return new Promise((res, rej) => {
+      const out = {}; const c = db.transaction("kv").objectStore("kv").openCursor();
+      c.onsuccess = () => { const cur = c.result; if (cur) { out[cur.key] = cur.value; cur.continue(); } else res(out); };
+      c.onerror = () => rej(c.error); }); },
+    clear: () => tx("readwrite", s => s.clear()),
+  };
+})();
+
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const app = $("#app");
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => { t.classList.remove("on"); t.textContent = ""; }, 1600); }
+const debounce = (fn, ms = 400) => { let h; return (...a) => { clearTimeout(h); h = setTimeout(() => fn(...a), ms); }; };
+const monthKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+const today = () => { const d = new Date(); return `${monthKey(d)}-${String(d.getDate()).padStart(2, "0")}`; };
+const monthName = m => new Date(+m.slice(0, 4), +m.slice(5) - 1, 1).toLocaleString(undefined, { month: "long", year: "numeric" });
+const sec = (title, side = "") => `<div class="sec"><h2 id="h">${title}</h2>${side}</div>`;
+const footer = `<footer class="foot">
+  <p><strong>This is a journal, not medical care.</strong> If you're in crisis in the US, call or text <a href="tel:988">988</a>. In an emergency, call <a href="tel:911">911</a>.</p>
+  <p>Independent. Not made, sponsored, or endorsed by any drug manufacturer, clinic, or treatment program.</p>
+  <nav aria-label="Legal"><a href="#privacy">Privacy</a><a href="#terms">Terms</a><a href="#accessibility">Accessibility</a></nav>
+  <p>© 2026 ${OWNER}</p></footer>`;
+
+// ---------- router ----------
+const views = {};
+const go = (v, arg) => { location.hash = arg ? `${v}/${arg}` : v; };
+const titles = { sessions: "Sessions", session: "Session", intent: "Intentions", habits: "Habits", sleep: "Sleep", more: "More", privacy: "Privacy", terms: "Terms", accessibility: "Accessibility" };
+async function route(){
+  let [v, arg] = (location.hash.slice(1) || "sessions").split("/");
+  if (!views[v]) v = "sessions";
+  const tab = v === "session" ? "sessions" : v;
+  document.querySelectorAll("nav.tabs a").forEach(a => a.dataset.v === tab ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+  document.title = `${titles[v]} · kjournal`;
+  await views[v](arg ? decodeURIComponent(arg) : undefined);
+  window.scrollTo(0, 0);
+  if (route.ran) app.focus({ preventScroll: true }); // move screen readers to the new view
+  route.ran = true;
+}
+addEventListener("hashchange", route);
+
+// ---------- sessions ----------
+views.sessions = async () => {
+  const idx = (await DB.get("sessions")) || [];
+  const rows = [];
+  for (const id of idx) { const s = await DB.get("s:" + id); if (s) rows.push(s); }
+  rows.sort((a, b) => (b.date || "").localeCompare(a.date || "") || b.n - a.n);
+  app.innerHTML = `${sec("Session log", `<span class="eyebrow">${rows.length} ${rows.length === 1 ? "entry" : "entries"}</span>`)}
+    <button class="btn" id="new">Start a new entry</button>
+    ${rows.length ? `<ul class="list">${rows.map(s => `<li><a href="#session/${esc(s.id)}">
+      <span><span class="ttl">Session ${String(s.n).padStart(2, "0")}${s.dose ? ", " + esc(s.dose) : ""}</span><br>
+      <small>${esc((s.intention || "").split("\n")[0].slice(0, 80)) || "No intention written yet"}</small></span>
+      <small>${esc(s.date || "")}</small></a></li>`).join("")}</ul>`
+    : `<p class="empty">No entries yet. Start one before your next session.</p>`}${footer}`;
+  $("#new").onclick = async () => {
+    const id = Date.now().toString(36);
+    await DB.set("s:" + id, { id, n: idx.length + 1, date: today(), dose: "", feel: 5, intention: "", reflection: "" });
+    await DB.set("sessions", [...idx, id]);
+    go("session", id);
+  };
+};
+
+views.session = async id => {
+  const s = await DB.get("s:" + id);
+  if (!s) return go("sessions");
+  app.innerHTML = `${sec("Session log", `<span class="eyebrow">No. ${String(s.n).padStart(2, "0")}</span>`)}
+    <div class="field"><label for="dose">Session / dose</label><input id="dose" value="${esc(s.dose)}" autocomplete="off"></div>
+    <div class="field"><label for="date">Date</label><input id="date" type="date" value="${esc(s.date)}"></div>
+    <div class="slider"><label for="feel">How I feel going in <output id="feelv" for="feel">${s.feel} of 10</output></label>
+      <input id="feel" type="range" min="0" max="10" value="${s.feel}" aria-valuetext="${s.feel} of 10"></div>
+    <section class="box" aria-labelledby="hi"><h3 id="hi" class="t-int">Intention</h3>
+      <p class="hint" id="hi-d">What do I want to carry in with me? <a href="#intent">Ideas</a></p>
+      <textarea class="lined" id="intention" aria-labelledby="hi" aria-describedby="hi-d" style="min-height:6rem">${esc(s.intention)}</textarea></section>
+    <section class="box" aria-labelledby="hr"><h3 id="hr" class="t-ref">Reflection</h3>
+      <p class="hint" id="hr-d">What came up? What do I want to remember? How does the future feel?</p>
+      <textarea class="lined" id="reflection" aria-labelledby="hr" aria-describedby="hr-d" style="min-height:16rem">${esc(s.reflection)}</textarea></section>
+    <section class="box" aria-labelledby="hd"><h3 id="hd">Open page</h3>
+      <p class="hint">Draw or map it out. Works with Apple Pencil, a finger, or a mouse.</p>
+      <div class="tools" id="tools" role="toolbar" aria-label="Drawing tools"></div>
+      <div class="pad"><canvas id="cv" role="img" aria-label="Drawing for this session. For a typed version, use the Reflection box."></canvas></div></section>
+    <div class="row" style="margin-top:var(--s5)"><a class="btn quiet" href="#sessions">All entries</a><span class="spacer"></span>
+      <button class="btn danger" id="del">Delete entry</button></div>${footer}`;
+  const save = debounce(async () => {
+    Object.assign(s, { dose: $("#dose").value, date: $("#date").value, feel: +$("#feel").value,
+      intention: $("#intention").value, reflection: $("#reflection").value });
+    await DB.set("s:" + id, s); toast("Saved");
+  });
+  app.oninput = e => {
+    if (e.target.id === "feel") { $("#feelv").textContent = `${e.target.value} of 10`; e.target.setAttribute("aria-valuetext", `${e.target.value} of 10`); }
+    if (!e.target.closest(".tools")) save();
+  };
+  $("#del").onclick = async () => {
+    if (!confirm("Delete this entry and its drawing? This can't be undone.")) return;
+    await DB.del("s:" + id); await DB.del("d:" + id);
+    await DB.set("sessions", ((await DB.get("sessions")) || []).filter(x => x !== id));
+    toast("Entry deleted"); go("sessions");
+  };
+  drawPad($("#cv"), $("#tools"), "d:" + id);
+};
+
+// ---------- drawing pad ----------
+async function drawPad(cv, tools, key){
+  const inks = [["Ink", getComputedStyle(document.documentElement).getPropertyValue("--ink").trim() || "#26221e"],
+    ["Clay", "#b0532f"], ["Green", "#3e6153"], ["Blue", "#2f5f86"], ["Ochre", "#b8892c"]];
+  let color = inks[0][1], erasing = false;
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const r = cv.getBoundingClientRect();
+  cv.width = r.width * dpr; cv.height = r.height * dpr;
+  const ctx = cv.getContext("2d"); ctx.scale(dpr, dpr); ctx.lineCap = ctx.lineJoin = "round";
+  const saved = await DB.get(key);
+  if (saved) { const img = new Image(); img.onload = () => ctx.drawImage(img, 0, 0, r.width, r.height); img.src = saved; }
+  const history = [];
+  tools.innerHTML = inks.map(([n, c], i) => `<button class="sw" data-c="${c}" aria-pressed="${!i}" aria-label="${n} ink"><span style="background:${c}"></span></button>`).join("") +
+    `<button class="btn quiet" data-t="erase" aria-pressed="false">Eraser</button>
+     <button class="btn quiet" data-t="undo">Undo</button>
+     <button class="btn quiet" data-t="clear">Clear</button>`;
+  const store = debounce(() => DB.set(key, cv.toDataURL("image/png")).then(() => toast("Drawing saved")), 600);
+  const setPressed = (sel, el) => tools.querySelectorAll(sel).forEach(x => x.setAttribute("aria-pressed", x === el));
+  tools.onclick = e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.classList.contains("sw")) { color = b.dataset.c; erasing = false; setPressed(".sw", b); setPressed("[data-t=erase]", null); }
+    const t = b.dataset.t;
+    if (t === "erase") { erasing = !erasing; b.setAttribute("aria-pressed", erasing); }
+    if (t === "undo") { if (history.length) { ctx.putImageData(history.pop(), 0, 0); store(); } else toast("Nothing to undo"); }
+    if (t === "clear" && confirm("Clear the drawing?")) { history.push(ctx.getImageData(0, 0, cv.width, cv.height)); ctx.clearRect(0, 0, cv.width, cv.height); store(); }
+  };
+  let last = null;
+  const pt = e => { const b = cv.getBoundingClientRect(); return { x: e.clientX - b.left, y: e.clientY - b.top, p: e.pressure || .5 }; };
+  cv.onpointerdown = e => {
+    try { cv.setPointerCapture(e.pointerId); } catch {}
+    history.push(ctx.getImageData(0, 0, cv.width, cv.height)); if (history.length > 30) history.shift();
+    last = pt(e);
+  };
+  cv.onpointermove = e => {
+    if (!last) return;
+    for (const ev of (e.getCoalescedEvents ? e.getCoalescedEvents() : [e])) {
+      const p = pt(ev);
+      ctx.globalCompositeOperation = erasing ? "destination-out" : "source-over";
+      ctx.strokeStyle = color;
+      ctx.lineWidth = erasing ? 22 : 2.6 * (e.pointerType === "pen" ? .4 + p.p * 1.6 : 1);
+      ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+      last = p;
+    }
+  };
+  cv.onpointerup = cv.onpointercancel = () => { if (last) store(); last = null; };
+}
+
+// ---------- intentions ----------
+views.intent = async () => {
+  const mine = (await DB.get("myIntentions")) || "";
+  const themes = ["Rest and safety in my body", "Patience with a part of me that is hurting", "Noticing what I'm grateful for",
+    "Letting go of something I've been carrying", "Curiosity about who I am becoming", "Connection to the people and animals I love"];
+  app.innerHTML = `${sec("Setting an intention", `<span class="eyebrow">Before you begin</span>`)}
+    <ul class="tips">
+      <li><b>Keep it short.</b><span>One line you could say to yourself with your eyes closed.</span></li>
+      <li><b>Make it yours.</b><span>It should matter to you, not sound good to someone else.</span></li>
+      <li><b>Point it forward.</b><span>Say what you want to move toward, not what to avoid.</span></li>
+      <li><b>Hold it loosely.</b><span>Bring it in before the session, then let it go.</span></li>
+      <li><b>Return to it.</b><span>If you drift, the intention is a place to come back to.</span></li>
+    </ul>
+    <section class="box" aria-labelledby="th"><h3 id="th">Themes to borrow from</h3><p class="hint">Tap one to copy it.</p>
+      <ul class="themes">${themes.map(t => `<li><button>${esc(t)}</button></li>`).join("")}</ul></section>
+    <section class="box" aria-labelledby="mi"><h3 id="mi">My own ideas</h3><textarea class="lined" id="mine" aria-labelledby="mi">${esc(mine)}</textarea></section>${footer}`;
+  app.querySelectorAll(".themes button").forEach(b => b.onclick = async () => {
+    try { await navigator.clipboard.writeText(b.textContent); toast("Copied"); } catch { toast("Couldn't copy. Select the text instead."); }
+  });
+  $("#mine").oninput = debounce(() => DB.set("myIntentions", $("#mine").value).then(() => toast("Saved")));
+};
+
+// ---------- grids: tap, drag, or arrow keys ----------
+function grid(table, onChange){
+  const cells = [...table.querySelectorAll("td button")];
+  const cols = table.querySelector("tbody tr").querySelectorAll("td").length;
+  cells.forEach((b, i) => b.tabIndex = i ? -1 : 0);
+  let mode = null;
+  const set = (b, on) => { if ((b.getAttribute("aria-pressed") === "true") !== on) { b.setAttribute("aria-pressed", on); onChange(); } };
+  const at = e => { const el = document.elementFromPoint(e.clientX, e.clientY); return el && el.tagName === "BUTTON" && table.contains(el) ? el : null; };
+  table.addEventListener("pointerdown", e => { const b = at(e); if (!b) return; e.preventDefault(); mode = b.getAttribute("aria-pressed") !== "true"; set(b, mode); });
+  table.addEventListener("pointermove", e => { if (mode === null) return; const b = at(e); if (b) set(b, mode); });
+  addEventListener("pointerup", () => mode = null);
+  table.addEventListener("click", e => { const b = e.target.closest("td button"); if (b && e.detail === 0) set(b, b.getAttribute("aria-pressed") !== "true"); }); // keyboard
+  table.addEventListener("keydown", e => {
+    const i = cells.indexOf(document.activeElement); if (i < 0) return;
+    const j = { ArrowRight: i + 1, ArrowLeft: i - 1, ArrowDown: i + cols, ArrowUp: i - cols, Home: i - i % cols, End: i - i % cols + cols - 1 }[e.key];
+    if (j === undefined || j < 0 || j >= cells.length) return;
+    e.preventDefault(); cells[i].tabIndex = -1; cells[j].tabIndex = 0; cells[j].focus();
+  });
+}
+const monthField = (m, view) => `<div class="month"><label class="eyebrow" for="month">Month</label><input type="month" id="month" value="${m}"></div>`;
+const gridHelp = "Tap a box to fill it, or drag across several. With a keyboard, use the arrow keys and press Space.";
+
+views.habits = async (m = monthKey()) => {
+  const names = (await DB.get("habitNames")) || Array(10).fill("");
+  const on = new Set((await DB.get("habits:" + m)) || []);
+  const notes = (await DB.get("habitNotes:" + m)) || "";
+  const days = new Date(+m.slice(0, 4), +m.slice(5), 0).getDate();
+  const D = Array.from({ length: days }, (_, d) => d);
+  app.innerHTML = `${sec("Habit tracker", monthField(m))}
+    <p class="lede">Name up to ten things you want to build. Fill a box on each day you do one. ${gridHelp}</p>
+    <div class="gridwrap"><table class="g" id="grid"><caption class="sr">Habits for ${monthName(m)}</caption>
+      <thead><tr><th class="name" scope="col"><span class="sr">Habit</span></th>${D.map(d => `<th scope="col">${d + 1}</th>`).join("")}</tr></thead>
+      <tbody>${names.map((nm, r) => `<tr><th class="name" scope="row"><input data-r="${r}" value="${esc(nm)}" placeholder="Habit ${r + 1}" aria-label="Habit ${r + 1} name"></th>
+        ${D.map(d => `<td><button aria-pressed="${on.has(r + "-" + d)}" data-k="${r}-${d}" aria-label="${esc(nm) || "Habit " + (r + 1)}, day ${d + 1}"></button></td>`).join("")}</tr>`).join("")}</tbody>
+    </table></div>
+    <section class="box" aria-labelledby="nt"><h3 id="nt">What I noticed this month</h3><textarea class="lined" id="notes" aria-labelledby="nt">${esc(notes)}</textarea></section>${footer}`;
+  const t = $("#grid");
+  grid(t, debounce(() => DB.set("habits:" + m, [...t.querySelectorAll("button[aria-pressed=true]")].map(c => c.dataset.k)).then(() => toast("Saved")), 300));
+  t.addEventListener("input", debounce(e => {
+    DB.set("habitNames", [...t.querySelectorAll("th input")].map(i => i.value)).then(() => toast("Saved"));
+  }));
+  $("#notes").oninput = debounce(() => DB.set("habitNotes:" + m, $("#notes").value).then(() => toast("Saved")));
+  $("#month").onchange = e => e.target.value && go("habits", e.target.value);
+};
+
+views.sleep = async (m = monthKey()) => {
+  const on = new Set((await DB.get("sleep:" + m)) || []);
+  const days = new Date(+m.slice(0, 4), +m.slice(5), 0).getDate();
+  const hrs = Array.from({ length: 24 }, (_, i) => (i + 18) % 24); // 6 pm to 5 pm
+  const short = h => (h % 12 || 12) + (h === 0 ? "a" : h === 12 ? "p" : "");
+  const long = h => `${h % 12 || 12} ${h < 12 ? "AM" : "PM"}`;
+  app.innerHTML = `${sec("Sleep tracker", monthField(m))}
+    <p class="lede">Shade the hours you slept. Each row starts at 6 pm the night before. ${gridHelp}</p>
+    <div class="gridwrap"><table class="g sleep" id="grid"><caption class="sr">Sleep for ${monthName(m)}</caption>
+      <thead><tr><th scope="col"><span class="sr">Day</span></th>${hrs.map(h => `<th scope="col"><span aria-hidden="true">${short(h)}</span><span class="sr">${long(h)}</span></th>`).join("")}</tr></thead>
+      <tbody>${Array.from({ length: days }, (_, d) => `<tr><th scope="row">${d + 1}</th>${hrs.map(h => `<td><button aria-pressed="${on.has(d + "-" + h)}" data-k="${d}-${h}" aria-label="Day ${d + 1}, ${long(h)}"></button></td>`).join("")}</tr>`).join("")}</tbody>
+    </table></div>${footer}`;
+  const t = $("#grid");
+  grid(t, debounce(() => DB.set("sleep:" + m, [...t.querySelectorAll("button[aria-pressed=true]")].map(c => c.dataset.k)).then(() => toast("Saved")), 300));
+  $("#month").onchange = e => e.target.value && go("sleep", e.target.value);
+};
+
+// ---------- more ----------
+views.more = async () => {
+  const back = (await DB.get("lookingBack")) || {};
+  const qs = ["What feels different now compared to when I started?", "Which intention mattered most, and why?", "What do I want to keep doing between sessions?"];
+  app.innerHTML = `${sec("Looking back")}
+    ${qs.map((q, i) => `<section class="box" aria-labelledby="q${i}"><h3 id="q${i}">${q}</h3><textarea class="lined" data-i="${i}" aria-labelledby="q${i}">${esc(back[i])}</textarea></section>`).join("")}
+    ${sec("Your data")}
+    <p>Everything lives in this browser on this device. A different device or browser won't have it, and clearing your browser's website data erases it. Download a backup now and then.</p>
+    <div class="row"><button class="btn" id="exp">Download a backup</button>
+      <label class="btn quiet" for="imp" tabindex="0" id="impl">Restore a backup</label><input type="file" id="imp" accept="application/json,.json" class="sr">
+      <span class="spacer"></span><button class="btn danger" id="wipe">Erase everything</button></div>
+    <p class="lede" style="margin-top:var(--s5)">To open it like an app on iPhone or iPad: in Safari, tap Share, then Add to Home Screen.</p>${footer}`;
+  app.querySelectorAll("textarea[data-i]").forEach(t => t.oninput = debounce(async () => { back[t.dataset.i] = t.value; await DB.set("lookingBack", back); toast("Saved"); }));
+  $("#impl").onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("#imp").click(); } };
+  $("#exp").onclick = async () => {
+    const blob = new Blob([JSON.stringify({ app: "session-journal", v: 1, at: new Date().toISOString(), data: await DB.all() })], { type: "application/json" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = `kjournal-backup-${today()}.json`; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000); toast("Backup downloaded");
+  };
+  $("#imp").onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const j = JSON.parse(await f.text());
+      if (j.app !== "session-journal" || typeof j.data !== "object") throw 0;
+      if (!confirm("Restore this backup? It replaces what's on this device now.")) return;
+      await DB.clear();
+      for (const [k, v] of Object.entries(j.data)) await DB.set(k, v);
+      toast("Backup restored"); go("sessions");
+    } catch { alert("That file isn't a kjournal backup. Choose the .json file you downloaded from this page."); }
+  };
+  $("#wipe").onclick = async () => {
+    if (!confirm("Erase every entry, drawing, and tracker on this device? This can't be undone.")) return;
+    await DB.clear(); toast("Everything erased"); go("sessions");
+  };
+};
+
+// ---------- legal ----------
+const legal = (title, body) => async () => { app.innerHTML = `${sec(title)}<div class="prose"><p class="eff">Last updated ${UPDATED}</p>${body}</div>${footer}`; };
+views.privacy = legal("Privacy", `
+  <p>kjournal is built so we never see what you write.</p>
+  <h3>What stays on your device</h3>
+  <p>Your entries, drawings, trackers, and settings are stored in your browser's local storage on this device. They are not sent to us or to anyone else. This page is technically blocked from making network requests after it loads.</p>
+  <h3>What we don't do</h3>
+  <ul><li>No accounts, sign-ins, or passwords.</li><li>No cookies, analytics, ads, or tracking pixels.</li><li>No selling or sharing of data. We don't have your journal data to share.</li><li>No use of your writing to train AI models.</li></ul>
+  <h3>What the web server sees</h3>
+  <p>Like any website, the servers that deliver this page (our host and our network provider, Cloudflare) receive basic request information such as your IP address, browser type, and the time of the request. This is used only to deliver the page and protect it from abuse, and it never includes your journal contents.</p>
+  <h3>Your control</h3>
+  <p>You can download a backup, restore it, or erase everything at any time from the More tab. Clearing your browser's website data also erases it. Because we hold no copy, we can't recover lost entries.</p>
+  <h3>Health information</h3>
+  <p>You may write about your health. That information stays on your device. ${OWNER} is not a healthcare provider, and this journal is not covered by HIPAA.</p>
+  <h3>Age</h3><p>kjournal is intended for adults 18 and older.</p>
+  <h3>Changes</h3><p>If this policy changes, the date above will change too.</p>`);
+views.terms = legal("Terms of use", `
+  <h3>What this is</h3>
+  <p>kjournal is a personal reflection tool made by ${OWNER}. It is not a medical device and does not provide medical, psychological, or therapeutic advice, diagnosis, or treatment. Always follow the guidance of your care team.</p>
+  <h3>Crisis</h3>
+  <p>kjournal is not monitored and can't respond to emergencies. If you're in crisis in the US, call or text 988. In an emergency, call 911.</p>
+  <h3>Your content</h3>
+  <p>What you write is yours. It stays on your device, and you are responsible for keeping backups.</p>
+  <h3>Printable journal license</h3>
+  <p>If you bought the printable PDF, you may print it and use it in any note-taking app for your own personal use, as often as you like. Please don't resell, share, or redistribute the file.</p>
+  <h3>Independence</h3>
+  <p>${OWNER} and kjournal are not affiliated with, sponsored by, or endorsed by any drug manufacturer, clinic, or treatment program. Any product names mentioned belong to their owners.</p>
+  <h3>No warranty</h3>
+  <p>kjournal is provided "as is", without warranties of any kind. To the fullest extent the law allows, ${OWNER} is not liable for any loss of data or for indirect or consequential damages from using it.</p>
+  <h3>Governing law</h3>
+  <p>These terms are governed by the laws of South Carolina, USA.</p>`);
+views.accessibility = legal("Accessibility", `
+  <p>We want kjournal to work for everyone. We aim to meet the Web Content Accessibility Guidelines (WCAG) 2.2 at level AA.</p>
+  <h3>What's built in</h3>
+  <ul><li>Every control works with a keyboard. The trackers use arrow keys and Space.</li>
+  <li>Screen readers can name every field, button, and tracker cell.</li>
+  <li>Text and controls meet AA color contrast.</li>
+  <li>Text resizes with your browser and system settings.</li>
+  <li>Touch targets are at least 44 pixels, and animation is turned off if you've asked your device to reduce motion.</li></ul>
+  <h3>Known limits</h3>
+  <p>The drawing area needs a pointer, finger, or stylus. Everything you might draw can also be typed in the Reflection box.</p>
+  <h3>Feedback</h3>
+  <p>If something doesn't work for you, please tell us through the contact option where you got kjournal, and we'll work on a fix.</p>`);
+
+route();
+</script>
+</body>
+</html>
