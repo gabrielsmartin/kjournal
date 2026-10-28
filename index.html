@@ -42,7 +42,7 @@ a{color:var(--r);text-underline-offset:3px}
 .skip:focus{top:16px}
 
 .hero{background:var(--grad);color:#fff;padding:calc(36px + env(safe-area-inset-top)) 0 36px}
-.hero h1{margin:0;font-size:clamp(40px,11vw,64px);line-height:.95;letter-spacing:-.02em;text-transform:lowercase}
+.hero h1{margin:14px 0 0;font-size:clamp(32px,8vw,52px);line-height:1.05;letter-spacing:-.02em;max-width:34rem}
 .hero .sub{font-size:1.2rem;margin:16px 0 0;max-width:34rem}
 .hero .priv{display:inline-block;margin-top:16px;font-size:.9rem;font-weight:600;background:rgba(0,0,0,.22);padding:6px 12px;border-radius:99px}
 .hero .ctas{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:24px}
@@ -83,6 +83,7 @@ ul.ticks li:before{content:"";position:absolute;left:4px;top:14px;width:9px;heig
 .price{display:flex;align-items:baseline;gap:10px;margin:4px 0 10px}
 .price b{font-size:2.2rem;letter-spacing:-.02em}
 .price span{color:var(--mute)}
+a.text.sample{display:block;text-align:center;margin-top:12px;color:var(--ink);font-weight:600}
 .why{font-size:.95rem;color:var(--mute);margin:12px 0 0}
 
 details{border-bottom:1px solid var(--line)}
@@ -109,33 +110,38 @@ footer nav a{margin-right:16px;display:inline-block;padding:6px 0}
 
 <header class="hero"><div class="wrap">
   <a class="logo" href="/" aria-label="kjournal home"><img src="/kjournal-icon-180.png" alt="" width="40" height="40"></a>
-  <h1>kjournal</h1>
-  <p class="sub">Set an intention before your session. Write or draw what came up after. Track sleep and habits in between.</p>
-  <span class="priv">Free. No account. Nothing leaves your phone.</span>
+  <h1>A journal for before and after your sessions</h1>
+  <p class="sub">Set an intention before. Reflect after. Track sleep and habits in between. Print it, or fill it in on your iPad.</p>
   <div class="ctas">
-    <a class="btn white" href="#try">Try it free</a>
-    <a class="text" href="#printable">Get the printable version</a>
+    <a class="btn white" data-link="full" href="#">Get the printable journal · $12</a>
+    <a class="text" href="/journal/">Or use it free online</a>
   </div>
+  <span class="priv">Instant PDF download. 31 pages.</span>
 </div></header>
 
 <main class="wrap" id="main">
 
-  <section aria-labelledby="try-h" id="try">
-    <div class="bar"><h2 id="try-h">Start with one intention</h2></div>
-    <p class="lede">Pick one that fits your next session, or write your own. It becomes your first entry.</p>
-    <div class="chips" role="group" aria-label="Intention ideas" id="chips"></div>
-    <div class="own"><label for="ownin" class="sr" style="position:absolute;left:-9999px">Write your own intention</label>
-      <input id="ownin" placeholder="Or write your own…" maxlength="140" autocomplete="off"></div>
-
-    <div class="log" aria-live="polite">
-      <div class="head"><span>Session log</span><span>No. 01</span></div>
-      <div class="body">
-        <div class="lbl">Intention</div>
-        <div class="line empty" id="preview">Your intention will show up here</div>
-      </div>
+  <section aria-labelledby="pp-h" id="printable">
+    <div class="bar"><h2 id="pp-h">The printable journal</h2></div>
+    <p class="lede">31 pages to print or use in GoodNotes. Pay once, download instantly, keep it forever.</p>
+    <div class="pages">
+      <figure><img src="/pg-session.png" alt="Session log page with intention and reflection sections" loading="lazy" width="355" height="459"><figcaption>Session log</figcaption></figure>
+      <figure><img src="/pg-intention.png" alt="Intention guide page with tips and themes" loading="lazy" width="355" height="459"><figcaption>Intention guide</figcaption></figure>
+      <figure><img src="/pg-sleep.png" alt="Monthly sleep tracker grid" loading="lazy" width="355" height="459"><figcaption>Sleep tracker</figcaption></figure>
     </div>
-    <button class="btn grad block" id="start">Save this and open my journal</button>
-    <p class="lede" style="margin-top:10px;font-size:.9rem">Saved only in this browser. You can change or delete it anytime.</p>
+
+
+    <div class="card">
+      <div class="price"><b>$12</b><span>one time, yours to keep</span></div>
+      <ul class="ticks">
+        <li>12 session spreads, sleep and habit trackers, intention guide, looking-back pages</li>
+        <li>Works in GoodNotes, Notability, or any PDF app. Print as many copies as you need.</li>
+        <li>Tap-to-jump contents page</li>
+      </ul>
+      <a class="btn grad block" data-link="full" href="#" style="margin-top:14px">Get the printable journal · $12</a>
+      <a class="text sample" data-link="sample" href="#">Not sure yet? Get 5 free sample pages</a>
+      <p class="why">Your purchase keeps the online journal free, with no ads and no data collection.</p>
+    </div>
   </section>
 
   <section aria-labelledby="in-h">
@@ -159,31 +165,26 @@ footer nav a{margin-right:16px;display:inline-block;padding:6px 0}
     </ul>
   </section>
 
-  <section aria-labelledby="pp-h" id="printable">
-    <div class="bar"><h2 id="pp-h">The printable journal</h2></div>
-    <p class="lede">Prefer pen and paper, or GoodNotes on an iPad? Same journal as a 31-page PDF.</p>
-    <div class="pages">
-      <figure><img src="/pg-session.png" alt="Session log page with intention and reflection sections" loading="lazy" width="355" height="459"><figcaption>Session log</figcaption></figure>
-      <figure><img src="/pg-intention.png" alt="Intention guide page with tips and themes" loading="lazy" width="355" height="459"><figcaption>Intention guide</figcaption></figure>
-      <figure><img src="/pg-sleep.png" alt="Monthly sleep tracker grid" loading="lazy" width="355" height="459"><figcaption>Sleep tracker</figcaption></figure>
-    </div>
+  <section aria-labelledby="try-h" id="try">
+    <div class="bar"><h2 id="try-h">Or try it free online</h2></div>
+    <p class="lede">No account needed. Pick an intention, or write your own, and it becomes your first entry.</p>
+    <div class="chips" role="group" aria-label="Intention ideas" id="chips"></div>
+    <div class="own"><label for="ownin" class="sr" style="position:absolute;left:-9999px">Write your own intention</label>
+      <input id="ownin" placeholder="Or write your own…" maxlength="140" autocomplete="off"></div>
 
-    <div class="card">
-      <p style="margin:0 0 12px"><b>Not sure yet?</b> Get 5 sample pages free. No email needed.</p>
-      <a class="btn block" data-link="sample" href="#">Download the free pages</a>
+    <div class="log" aria-live="polite">
+      <div class="head"><span>Session log</span><span>No. 01</span></div>
+      <div class="body">
+        <div class="lbl">Intention</div>
+        <div class="line empty" id="preview">Your intention will show up here</div>
+      </div>
     </div>
-
-    <div class="card">
-      <div class="price"><b>$12</b><span>one time, yours to keep</span></div>
-      <ul class="ticks">
-        <li>12 session spreads, sleep and habit trackers, intention guide, looking-back pages</li>
-        <li>Works in GoodNotes, Notability, or any PDF app. Print as many copies as you need.</li>
-        <li>Tap-to-jump contents page</li>
-      </ul>
-      <a class="btn grad block" data-link="full" href="#" style="margin-top:14px">Get the printable journal</a>
-      <p class="why">Your purchase keeps the online journal free, with no ads and no data collection.</p>
-    </div>
+    <button class="btn grad block" id="start">Save this and open my journal</button>
+    <p class="lede" style="margin-top:10px;font-size:.9rem">Saved only in this browser. You can change or delete it anytime.</p>
   </section>
+
+
+
 
   <section aria-labelledby="fq-h">
     <div class="bar"><h2 id="fq-h">Questions</h2></div>
@@ -203,8 +204,8 @@ footer nav a{margin-right:16px;display:inline-block;padding:6px 0}
 </main>
 
 <div class="sticky" id="sticky" aria-hidden="true"><div class="wrap">
-  <small>Free, private, no account.</small>
-  <a class="btn grad" href="/journal/" tabindex="-1">Open the journal</a>
+  <small><b>Printable journal</b><br>31 pages · instant download</small>
+  <a class="btn grad" data-link="full" href="#" tabindex="-1">Get it · $12</a>
 </div></div>
 
 <script>
