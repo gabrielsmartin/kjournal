@@ -91,20 +91,30 @@ textarea.lined:focus-visible{outline-offset:6px}
 .sw span{width:26px;height:26px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line-strong)}
 .sw[aria-pressed=true] span{box-shadow:0 0 0 2px var(--ink)}
 
-.gridwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table.g{border-collapse:collapse;font-size:.65rem;color:var(--mute);user-select:none;-webkit-user-select:none}
+/* trackers: fill the width on iPad, scroll sideways on phones. Bigger boxes on touch screens. */
+main.wrap[data-view=habits],main.wrap[data-view=sleep]{max-width:1180px}
+.gridwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
+table.g{--cell:22px;--cellh:26px;--first:112px;width:100%;min-width:calc(var(--first) + var(--n) * var(--cell));table-layout:fixed;border-collapse:collapse;font-size:.65rem;color:var(--mute);user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+table.g.sleep{--first:40px}
+@media (pointer:coarse){table.g{--cell:30px;--cellh:34px;font-size:.75rem}}
 table.g th,table.g td{border:1px solid var(--line);padding:0;text-align:center;font-weight:400}
-table.g thead th{height:24px;min-width:24px}
-table.g tbody th{padding:0 5px}
-table.g td button{display:block;width:24px;height:24px;border:0;margin:0;padding:0;background:none;cursor:pointer;touch-action:none}
+table.g thead th{height:24px}
+table.g thead th:first-child{width:var(--first)}
+table.g tbody th{padding:0 4px}
+table.g thead th:first-child,table.g tbody th{position:sticky;left:0;z-index:1;background:var(--paper)}
+/* manipulation: finger can scroll, no double-tap zoom. Pencil and long-press painting are handled in JS. */
+table.g td button{display:block;width:100%;height:var(--cellh);border:0;margin:0;padding:0;background:none;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 table.g td button[aria-pressed=true]{background:var(--fill-habit)}
 table.g.sleep td button[aria-pressed=true]{background:var(--fill-sleep)}
 table.g td button:focus-visible{outline-offset:-3px}
-table.g th.name{min-width:130px;border:0;border-bottom:1px solid var(--line);text-align:left}
-table.g th.name input{width:100%;border:0;background:none;font-size:.8rem;padding:2px;min-height:24px;color:var(--ink)}
+table.g.painting{outline:2px solid var(--r);outline-offset:2px}
+table.g th.name{border:0;border-bottom:1px solid var(--line);text-align:left}
+table.g th.name input{width:100%;border:0;background:none;font-size:.8rem;padding:2px;min-height:var(--cellh);color:var(--ink);text-overflow:ellipsis}
 .month{display:flex;align-items:center;gap:6px}
 .month .eyebrow{color:#fff}
 .month input{border:0;background:rgba(0,0,0,.2);color:#fff;border-radius:8px;padding:4px 8px;min-height:32px;font-size:.8rem;color-scheme:dark}
+/* iOS zooms the page when focusing text smaller than 16px */
+@media (pointer:coarse){table.g th.name input,.month input{font-size:16px}}
 
 ul.tips{list-style:none;padding:0;margin:0}
 ul.tips li{padding:7px 0 7px 22px;position:relative}
@@ -199,6 +209,18 @@ const footer = `<footer class="foot">
   <nav aria-label="Legal"><a href="#privacy">Privacy</a><a href="#terms">Terms</a><a href="#accessibility">Accessibility</a></nav>
   <p>© 2026 ${OWNER}</p></footer>`;
 
+// ---------- Apple Pencil: once used on this device, palms and resting fingers are ignored ----------
+const pen = {
+  mode: (() => { try { return localStorage.getItem("kj-pen") === "1"; } catch { return false; } })(),
+  last: 0,
+  seen(){ // returns true the first time a Pencil is used
+    pen.last = Date.now();
+    if (pen.mode) return false;
+    pen.mode = true; try { localStorage.setItem("kj-pen", "1"); } catch {}
+    return true;
+  },
+};
+
 // ---------- router ----------
 const views = {};
 const go = (v, arg) => { location.hash = arg ? `${v}/${arg}` : v; };
@@ -209,6 +231,7 @@ async function route(){
   const tab = v === "session" ? "sessions" : v;
   document.querySelectorAll("nav.tabs a").forEach(a => a.dataset.v === tab ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
   document.title = `${titles[v]} · kjournal`;
+  app.dataset.view = v;
   await views[v](arg ? decodeURIComponent(arg) : undefined);
   window.scrollTo(0, 0);
   if (route.ran) app.focus({ preventScroll: true }); // move screen readers to the new view
@@ -289,16 +312,8 @@ async function drawPad(cv, tools, key){
   const history = [];
   let W = 0, H = 0;
 
-  // pen mode is remembered per device
-  let penMode = false;
-  try { penMode = localStorage.getItem("kj-pen") === "1"; } catch {}
-  pad.classList.toggle("pen", penMode);
-  const setPen = () => {
-    if (penMode) return;
-    penMode = true; pad.classList.add("pen");
-    try { localStorage.setItem("kj-pen", "1"); } catch {}
-    toast("Pencil mode: fingers now scroll");
-  };
+  pad.classList.toggle("pen", pen.mode);
+  const setPen = () => { if (pen.seen()) { pad.classList.add("pen"); toast("Pencil mode: fingers now scroll"); } };
 
   // draw a saved image or canvas into the pad, scaled evenly and centered
   const paint = img => {
@@ -353,13 +368,13 @@ async function drawPad(cv, tools, key){
   const seg = (from, ctrl, to) => { ctx.lineWidth = (from.w + to.w) / 2; ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.quadraticCurveTo(ctrl.x, ctrl.y, to.x, to.y); ctx.stroke(); };
 
   // Safari: keep the Pencil from scrolling the page; in pen mode, let fingers scroll
-  cv.addEventListener("touchstart", e => { if (!penMode || [...e.changedTouches].some(t => t.touchType === "stylus")) e.preventDefault(); }, { passive: false });
+  cv.addEventListener("touchstart", e => { if (!pen.mode || [...e.changedTouches].some(t => t.touchType === "stylus")) e.preventDefault(); }, { passive: false });
   cv.addEventListener("touchmove", e => { if (active !== null && [...e.touches].some(t => t.touchType === "stylus")) e.preventDefault(); }, { passive: false });
   cv.oncontextmenu = e => e.preventDefault();
 
   cv.onpointerdown = e => {
     if (e.pointerType === "pen") setPen();
-    else if (penMode && e.pointerType === "touch") return; // palm or finger
+    else if (pen.mode && e.pointerType === "touch") return; // palm or finger
     if (active !== null || e.button > 0) return;
     e.preventDefault();
     active = e.pointerId;
@@ -414,12 +429,43 @@ function grid(table, onChange){
   const cells = [...table.querySelectorAll("td button")];
   const cols = table.querySelector("tbody tr").querySelectorAll("td").length;
   cells.forEach((b, i) => b.tabIndex = i ? -1 : 0);
-  let mode = null;
+  // Pencil or mouse: press and drag to fill, never scrolls.
+  // Finger: tap toggles, drag scrolls, press and hold then drag fills.
+  // Once a Pencil has been used here, a resting palm or finger never fills boxes.
+  let mode = null, pid = null, hold = null, start = null, first = null, downAt = 0;
   const set = (b, on) => { if ((b.getAttribute("aria-pressed") === "true") !== on) { b.setAttribute("aria-pressed", on); onChange(); } };
-  const at = e => { const el = document.elementFromPoint(e.clientX, e.clientY); return el && el.tagName === "BUTTON" && table.contains(el) ? el : null; };
-  table.addEventListener("pointerdown", e => { const b = at(e); if (!b) return; e.preventDefault(); mode = b.getAttribute("aria-pressed") !== "true"; set(b, mode); });
-  table.addEventListener("pointermove", e => { if (mode === null) return; const b = at(e); if (b) set(b, mode); });
-  addEventListener("pointerup", () => mode = null);
+  const at = e => { const el = document.elementFromPoint(e.clientX, e.clientY); return el && el.tagName === "BUTTON" && table.contains(el) && el.closest("td") ? el : null; };
+  const begin = b => { mode = b.getAttribute("aria-pressed") !== "true"; set(b, mode); table.classList.add("painting"); };
+  const end = () => { clearTimeout(hold); hold = mode = pid = first = null; table.classList.remove("painting"); };
+  table.addEventListener("pointerdown", e => {
+    const b = at(e); if (!b) return;
+    if (e.pointerType === "touch") {
+      if (pid !== null) return;
+      pid = e.pointerId; first = b; start = { x: e.clientX, y: e.clientY }; downAt = Date.now();
+      if (!pen.mode) hold = setTimeout(() => { hold = null; begin(first); navigator.vibrate && navigator.vibrate(8); }, 350);
+      return;
+    }
+    if (e.button > 0) return;
+    if (e.pointerType === "pen") pen.seen();
+    end(); // a Pencil takes over from a palm that landed first
+    e.preventDefault(); pid = e.pointerId; begin(b);
+  });
+  table.addEventListener("pointermove", e => {
+    if (e.pointerId !== pid) return;
+    if (mode === null) { if (Math.hypot(e.clientX - start.x, e.clientY - start.y) > 8) end(); return; } // finger is scrolling
+    const b = at(e); if (b) set(b, mode);
+  });
+  addEventListener("pointerup", e => {
+    if (e.pointerId !== pid) return;
+    // a quick finger tap; with a Pencil around, only short taps well clear of the last Pencil stroke count
+    if (mode === null && first && (!pen.mode || (Date.now() - downAt < 300 && Date.now() - pen.last > 800))) set(first, first.getAttribute("aria-pressed") !== "true");
+    end();
+  });
+  table.addEventListener("pointercancel", e => { if (e.pointerId === pid) end(); });
+  // Safari: keep the Pencil, and a finger that is filling, from scrolling the page
+  table.addEventListener("touchstart", e => { if ([...e.changedTouches].some(t => t.touchType === "stylus") && e.target.closest("td")) e.preventDefault(); }, { passive: false });
+  table.addEventListener("touchmove", e => { if (mode !== null) e.preventDefault(); }, { passive: false });
+  table.addEventListener("contextmenu", e => e.preventDefault());
   table.addEventListener("click", e => { const b = e.target.closest("td button"); if (b && e.detail === 0) set(b, b.getAttribute("aria-pressed") !== "true"); }); // keyboard
   table.addEventListener("keydown", e => {
     const i = cells.indexOf(document.activeElement); if (i < 0) return;
@@ -429,7 +475,7 @@ function grid(table, onChange){
   });
 }
 const monthField = (m, view) => `<div class="month"><label class="eyebrow" for="month">Month</label><input type="month" id="month" value="${m}"></div>`;
-const gridHelp = "Tap a box to fill it, or drag across several. With a keyboard, use the arrow keys and press Space.";
+const gridHelp = "Tap a box to fill it. To fill several, drag with Apple Pencil or a mouse, or press and hold with a finger, then drag. With a keyboard, use the arrow keys and press Space.";
 
 views.habits = async (m = monthKey()) => {
   const names = (await DB.get("habitNames")) || Array(10).fill("");
@@ -439,7 +485,7 @@ views.habits = async (m = monthKey()) => {
   const D = Array.from({ length: days }, (_, d) => d);
   app.innerHTML = `${sec("Habit tracker", monthField(m))}
     <p class="lede">Name up to ten things you want to build. Fill a box on each day you do one. ${gridHelp}</p>
-    <div class="gridwrap"><table class="g" id="grid"><caption class="sr">Habits for ${monthName(m)}</caption>
+    <div class="gridwrap"><table class="g" id="grid" style="--n:${days}"><caption class="sr">Habits for ${monthName(m)}</caption>
       <thead><tr><th class="name" scope="col"><span class="sr">Habit</span></th>${D.map(d => `<th scope="col">${d + 1}</th>`).join("")}</tr></thead>
       <tbody>${names.map((nm, r) => `<tr><th class="name" scope="row"><input data-r="${r}" value="${esc(nm)}" placeholder="Habit ${r + 1}" aria-label="Habit ${r + 1} name"></th>
         ${D.map(d => `<td><button aria-pressed="${on.has(r + "-" + d)}" data-k="${r}-${d}" aria-label="${esc(nm) || "Habit " + (r + 1)}, day ${d + 1}"></button></td>`).join("")}</tr>`).join("")}</tbody>
@@ -462,7 +508,7 @@ views.sleep = async (m = monthKey()) => {
   const long = h => `${h % 12 || 12} ${h < 12 ? "AM" : "PM"}`;
   app.innerHTML = `${sec("Sleep tracker", monthField(m))}
     <p class="lede">Shade the hours you slept. Each row starts at 6 pm the night before. ${gridHelp}</p>
-    <div class="gridwrap"><table class="g sleep" id="grid"><caption class="sr">Sleep for ${monthName(m)}</caption>
+    <div class="gridwrap"><table class="g sleep" id="grid" style="--n:24"><caption class="sr">Sleep for ${monthName(m)}</caption>
       <thead><tr><th scope="col"><span class="sr">Day</span></th>${hrs.map(h => `<th scope="col"><span aria-hidden="true">${short(h)}</span><span class="sr">${long(h)}</span></th>`).join("")}</tr></thead>
       <tbody>${Array.from({ length: days }, (_, d) => `<tr><th scope="row">${d + 1}</th>${hrs.map(h => `<td><button aria-pressed="${on.has(d + "-" + h)}" data-k="${d}-${h}" aria-label="Day ${d + 1}, ${long(h)}"></button></td>`).join("")}</tr>`).join("")}</tbody>
     </table></div>${footer}`;
