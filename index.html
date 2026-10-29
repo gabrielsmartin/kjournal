@@ -84,6 +84,12 @@ ul.ticks li:before{content:"";position:absolute;left:4px;top:14px;width:9px;heig
 .price b{font-size:2.2rem;letter-spacing:-.02em}
 .price span{color:var(--mute)}
 a.text.sample{display:block;text-align:center;margin-top:12px;color:var(--ink);font-weight:600}
+.zoom{all:unset;display:block;cursor:zoom-in;border-radius:6px}
+.zoom:focus-visible{outline:3px solid #db2e45;outline-offset:3px}
+#lb{border:0;padding:0;background:transparent;max-width:min(92vw,720px);max-height:92vh}
+#lb::backdrop{background:rgba(20,10,25,.8)}
+#lb img{display:block;width:100%;height:auto;max-height:84vh;object-fit:contain;border-radius:8px;background:#fff}
+#lb .btn{display:flex;margin:12px auto 0}
 .why{font-size:.95rem;color:var(--mute);margin:12px 0 0}
 
 details{border-bottom:1px solid var(--line)}
@@ -123,11 +129,11 @@ footer nav a{margin-right:16px;display:inline-block;padding:6px 0}
 
   <section aria-labelledby="pp-h" id="printable">
     <div class="bar"><h2 id="pp-h">The printable journal</h2></div>
-    <p class="lede">31 pages to print or use in GoodNotes. Pay once, download instantly, keep it forever.</p>
+    <p class="lede">31 pages to print or use in GoodNotes. Pay once, download instantly, keep it forever. Tap a page to see it up close.</p>
     <div class="pages">
-      <figure><img src="/pg-session.png" alt="Session log page with intention and reflection sections" loading="lazy" width="355" height="459"><figcaption>Session log</figcaption></figure>
-      <figure><img src="/pg-intention.png" alt="Intention guide page with tips and themes" loading="lazy" width="355" height="459"><figcaption>Intention guide</figcaption></figure>
-      <figure><img src="/pg-sleep.png" alt="Monthly sleep tracker grid" loading="lazy" width="355" height="459"><figcaption>Sleep tracker</figcaption></figure>
+      <figure><button class="zoom" data-full="/pg-session-lg.png" aria-label="View Session log page larger"><img src="/pg-session.png" alt="Session log page with intention and reflection sections" loading="lazy" width="355" height="459"></button><figcaption>Session log</figcaption></figure>
+      <figure><button class="zoom" data-full="/pg-intention-lg.png" aria-label="View Intention guide page larger"><img src="/pg-intention.png" alt="Intention guide page with tips and themes" loading="lazy" width="355" height="459"></button><figcaption>Intention guide</figcaption></figure>
+      <figure><button class="zoom" data-full="/pg-sleep-lg.png" aria-label="View Sleep tracker page larger"><img src="/pg-sleep.png" alt="Monthly sleep tracker grid" loading="lazy" width="355" height="459"></button><figcaption>Sleep tracker</figcaption></figure>
     </div>
 
 
@@ -144,47 +150,20 @@ footer nav a{margin-right:16px;display:inline-block;padding:6px 0}
     </div>
   </section>
 
-  <section aria-labelledby="in-h">
-    <div class="bar"><h2 id="in-h">Why kjournal</h2></div>
-    <p class="lede">Ketamine-assisted psychotherapy (KAP) usually has three phases: preparation, the dosing session, and integration. Integration is where you make sense of what came up, but there's rarely a simple, structured way to capture it between sessions. I designed and built kjournal to fill that gap.</p>
+
+
+
+
+
+
+  <section aria-labelledby="fr-h">
+    <div class="bar"><h2 id="fr-h">Free online version</h2></div>
     <ul class="ticks">
-      <li><b>Session log.</b> Date, dose, how you feel going in, your intention, and your reflection after.</li>
-      <li><b>Intention guide</b> to help you set a focused goal before each session.</li>
-      <li><b>Sleep and habit trackers</b> to spot patterns across treatment. Sleep is a useful thing to watch between sessions.</li>
-      <li><b>Open pages and looking-back reviews</b> to bring to integration with your therapist.</li>
+      <li>The same journal in your browser, with Apple Pencil drawing and trackers.</li>
+      <li>No account. Your entries stay on your device. No ads, no tracking.</li>
     </ul>
+    <a class="btn block" href="/journal/">Open the free journal</a>
   </section>
-
-  <section aria-labelledby="pr-h">
-    <div class="bar"><h2 id="pr-h">Private by design</h2></div>
-    <ul class="ticks">
-      <li>No account, no email, no password to use the online journal.</li>
-      <li>Your entries are stored on your device. We never receive them.</li>
-      <li>No ads, no analytics, no tracking. Your writing is never used to train AI.</li>
-      <li>Download a backup or erase everything whenever you want.</li>
-    </ul>
-  </section>
-
-  <section aria-labelledby="try-h" id="try">
-    <div class="bar"><h2 id="try-h">Or try it free online</h2></div>
-    <p class="lede">No account needed. Pick an intention, or write your own, and it becomes your first entry.</p>
-    <div class="chips" role="group" aria-label="Intention ideas" id="chips"></div>
-    <div class="own"><label for="ownin" class="sr" style="position:absolute;left:-9999px">Write your own intention</label>
-      <input id="ownin" placeholder="Or write your own…" maxlength="140" autocomplete="off"></div>
-
-    <div class="log" aria-live="polite">
-      <div class="head"><span>Session log</span><span>No. 01</span></div>
-      <div class="body">
-        <div class="lbl">Intention</div>
-        <div class="line empty" id="preview">Your intention will show up here</div>
-      </div>
-    </div>
-    <button class="btn grad block" id="start">Save this and open my journal</button>
-    <p class="lede" style="margin-top:10px;font-size:.9rem">Saved only in this browser. You can change or delete it anytime.</p>
-  </section>
-
-
-
 
   <section aria-labelledby="fq-h">
     <div class="bar"><h2 id="fq-h">Questions</h2></div>
@@ -203,6 +182,7 @@ footer nav a{margin-right:16px;display:inline-block;padding:6px 0}
   </footer>
 </main>
 
+<dialog id="lb" aria-label="Page preview"><img id="lbimg" alt=""><button class="btn white" id="lbx">Close</button></dialog>
 <div class="sticky" id="sticky" aria-hidden="true"><div class="wrap">
   <small><b>Printable journal</b><br>31 pages · instant download</small>
   <a class="btn grad" data-link="full" href="#" tabindex="-1">Get it · $12</a>
@@ -226,46 +206,13 @@ document.querySelectorAll("[data-link]").forEach(a => {
   }
 });
 
-// demo: pick an intention, preview it, save it as the first journal entry
-const themes = ["Rest and safety in my body", "Patience with a part of me that is hurting", "Noticing what I'm grateful for",
-  "Letting go of something I've been carrying", "Curiosity about who I am becoming", "Connection to the people I love"];
-const chips = document.getElementById("chips"), own = document.getElementById("ownin"), preview = document.getElementById("preview");
-let chosen = "";
-chips.innerHTML = themes.map(t => `<button class="chip" aria-pressed="false">${t}</button>`).join("");
-const show = () => { preview.textContent = chosen || "Your intention will show up here"; preview.classList.toggle("empty", !chosen); };
-chips.onclick = e => {
-  const b = e.target.closest(".chip"); if (!b) return;
-  const on = b.getAttribute("aria-pressed") !== "true";
-  chips.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c === b && on));
-  chosen = on ? b.textContent : ""; own.value = ""; show();
-};
-own.oninput = () => { chosen = own.value.trim(); chips.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", "false")); show(); };
-
-// Same site as /journal, so this writes straight into the journal's on-device storage.
-function saveFirstEntry(intention){
-  return new Promise((res, rej) => {
-    const r = indexedDB.open("session-journal", 1);
-    r.onupgradeneeded = () => r.result.createObjectStore("kv");
-    r.onerror = () => rej(r.error);
-    r.onsuccess = () => {
-      const db = r.result, t = db.transaction("kv", "readwrite"), s = t.objectStore("kv");
-      const g = s.get("sessions");
-      g.onsuccess = () => {
-        const idx = g.result || [], id = Date.now().toString(36), d = new Date();
-        const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-        s.put({ id, n: idx.length + 1, date, dose: "", feel: 5, intention, reflection: "" }, "s:" + id);
-        s.put([...idx, id], "sessions");
-        t.oncomplete = () => res(id);
-      };
-      t.onerror = () => rej(t.error);
-    };
-  });
-}
-document.getElementById("start").onclick = async () => {
-  if (!chosen) { own.focus(); own.placeholder = "Pick one above or write your own"; return; }
-  try { const id = await saveFirstEntry(chosen); location.href = `/journal/#session/${id}`; }
-  catch { location.href = "/journal/"; }
-};
+// tap a page to see it larger
+const lb = document.getElementById("lb"), lbimg = document.getElementById("lbimg");
+document.querySelectorAll(".zoom").forEach(b => b.onclick = () => {
+  lbimg.src = b.dataset.full; lbimg.alt = b.getAttribute("aria-label").replace("View ", "").replace(" larger", "");
+  lb.showModal();
+});
+lb.onclick = () => lb.close();
 
 // sticky bar appears once the hero scrolls away
 const sticky = document.getElementById("sticky");
