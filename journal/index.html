@@ -78,8 +78,14 @@ textarea.lined:focus-visible{outline-offset:6px}
 .list small{color:var(--mute)}
 .empty{color:var(--mute);text-align:center;padding:30px 0}
 
-.pad{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card) radial-gradient(var(--line) 1px,transparent 1.3px) 0 0/18px 18px;touch-action:none}
-.pad canvas{display:block;width:100%;height:420px;touch-action:none}
+.pad{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card) radial-gradient(var(--line) 1px,transparent 1.3px) 0 0/18px 18px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* 4:3 so the page scales evenly when the iPad rotates. Finger scrolling is turned back on once a Pencil is used. */
+.pad canvas{display:block;width:100%;height:auto;aspect-ratio:4/3;touch-action:none}
+.pad.pen canvas{touch-action:pan-y pinch-zoom}
+.tools .sep{width:1px;height:28px;background:var(--line);margin:0 4px}
+.sz{width:44px;height:44px;border-radius:50%;border:0;background:none;display:grid;place-items:center;cursor:pointer;padding:0}
+.sz span{border-radius:50%;background:var(--ink)}
+.sz[aria-pressed=true]{background:#fdf0ee;box-shadow:inset 0 0 0 1px var(--r)}
 .tools{display:flex;gap:6px;align-items:center;margin:8px 0;flex-wrap:wrap}
 .sw{width:44px;height:44px;border-radius:50%;border:0;background:none;display:grid;place-items:center;cursor:pointer;padding:0}
 .sw span{width:26px;height:26px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px var(--line-strong)}
@@ -246,7 +252,7 @@ views.session = async id => {
       <p class="hint" id="hr-d">What came up? What do I want to remember? How does the future feel?</p>
       <textarea class="lined" id="reflection" aria-labelledby="hr" aria-describedby="hr-d" style="min-height:16rem">${esc(s.reflection)}</textarea></section>
     <section class="box" aria-labelledby="hd"><h3 id="hd">Open page</h3>
-      <p class="hint">Draw or map it out. Works with Apple Pencil, a finger, or a mouse.</p>
+      <p class="hint">Draw or map it out. Works with Apple Pencil, a finger, or a mouse. Once you draw with Pencil, your palm and fingers won't leave marks.</p>
       <div class="tools" id="tools" role="toolbar" aria-label="Drawing tools"></div>
       <div class="pad"><canvas id="cv" role="img" aria-label="Drawing for this session. For a typed version, use the Reflection box."></canvas></div></section>
     <div class="row" style="margin-top:var(--s5)"><a class="btn quiet" href="#sessions">All entries</a><span class="spacer"></span>
@@ -270,50 +276,115 @@ views.session = async id => {
 };
 
 // ---------- drawing pad ----------
+// Apple Pencil: pressure-shaped, smoothed strokes. After the first Pencil stroke, fingers and palms
+// stop drawing (they scroll the page instead). The canvas is 4:3 and rescales evenly on rotation.
 async function drawPad(cv, tools, key){
+  const pad = cv.parentElement;
   const inks = [["Ink", getComputedStyle(document.documentElement).getPropertyValue("--ink").trim() || "#26221e"],
     ["Clay", "#b0532f"], ["Green", "#3e6153"], ["Blue", "#2f5f86"], ["Ochre", "#b8892c"]];
-  let color = inks[0][1], erasing = false;
+  const sizes = [["Fine", 1.6, 12], ["Medium", 2.8, 22], ["Bold", 5, 36]]; // name, pen width, eraser width
+  let color = inks[0][1], erasing = false, size = sizes[1];
+  const ctx = cv.getContext("2d");
   const dpr = Math.min(devicePixelRatio || 1, 2);
-  const r = cv.getBoundingClientRect();
-  cv.width = r.width * dpr; cv.height = r.height * dpr;
-  const ctx = cv.getContext("2d"); ctx.scale(dpr, dpr); ctx.lineCap = ctx.lineJoin = "round";
-  const saved = await DB.get(key);
-  if (saved) { const img = new Image(); img.onload = () => ctx.drawImage(img, 0, 0, r.width, r.height); img.src = saved; }
   const history = [];
+  let W = 0, H = 0;
+
+  // pen mode is remembered per device
+  let penMode = false;
+  try { penMode = localStorage.getItem("kj-pen") === "1"; } catch {}
+  pad.classList.toggle("pen", penMode);
+  const setPen = () => {
+    if (penMode) return;
+    penMode = true; pad.classList.add("pen");
+    try { localStorage.setItem("kj-pen", "1"); } catch {}
+    toast("Pencil mode: fingers now scroll");
+  };
+
+  // draw a saved image or canvas into the pad, scaled evenly and centered
+  const paint = img => {
+    const s = Math.min(W / img.width, H / img.height), w = img.width * s, h = img.height * s;
+    ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
+  };
+  const fit = () => {
+    const r = cv.getBoundingClientRect();
+    if (!r.width || Math.round(r.width) === W) return;
+    let old = null;
+    if (W) { old = document.createElement("canvas"); old.width = cv.width; old.height = cv.height; old.getContext("2d").drawImage(cv, 0, 0); }
+    W = Math.round(r.width); H = Math.round(r.height);
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.lineCap = ctx.lineJoin = "round";
+    if (old) paint(old);
+    history.length = 0; // old snapshots no longer match the new size
+  };
+  fit();
+  const saved = await DB.get(key);
+  if (saved) { const img = new Image(); img.onload = () => paint(img); img.src = saved; }
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(() => cv.isConnected ? fit() : ro.disconnect());
+    ro.observe(cv);
+  }
+
   tools.innerHTML = inks.map(([n, c], i) => `<button class="sw" data-c="${c}" aria-pressed="${!i}" aria-label="${n} ink"><span style="background:${c}"></span></button>`).join("") +
-    `<button class="btn quiet" data-t="erase" aria-pressed="false">Eraser</button>
+    `<span class="sep" aria-hidden="true"></span>` +
+    sizes.map(([n, w], i) => `<button class="sz" data-s="${i}" aria-pressed="${i === 1}" aria-label="${n} line"><span style="width:${w * 2 + 2}px;height:${w * 2 + 2}px"></span></button>`).join("") +
+    `<span class="sep" aria-hidden="true"></span>
+     <button class="btn quiet" data-t="erase" aria-pressed="false">Eraser</button>
      <button class="btn quiet" data-t="undo">Undo</button>
      <button class="btn quiet" data-t="clear">Clear</button>`;
   const store = debounce(() => DB.set(key, cv.toDataURL("image/png")).then(() => toast("Drawing saved")), 600);
   const setPressed = (sel, el) => tools.querySelectorAll(sel).forEach(x => x.setAttribute("aria-pressed", x === el));
+  const snap = () => { history.push(ctx.getImageData(0, 0, cv.width, cv.height)); if (history.length > 15) history.shift(); };
   tools.onclick = e => {
     const b = e.target.closest("button"); if (!b) return;
     if (b.classList.contains("sw")) { color = b.dataset.c; erasing = false; setPressed(".sw", b); setPressed("[data-t=erase]", null); }
+    if (b.classList.contains("sz")) { size = sizes[+b.dataset.s]; setPressed(".sz", b); }
     const t = b.dataset.t;
     if (t === "erase") { erasing = !erasing; b.setAttribute("aria-pressed", erasing); }
     if (t === "undo") { if (history.length) { ctx.putImageData(history.pop(), 0, 0); store(); } else toast("Nothing to undo"); }
-    if (t === "clear" && confirm("Clear the drawing?")) { history.push(ctx.getImageData(0, 0, cv.width, cv.height)); ctx.clearRect(0, 0, cv.width, cv.height); store(); }
+    if (t === "clear" && confirm("Clear the drawing?")) { snap(); ctx.clearRect(0, 0, W, H); store(); }
   };
-  let last = null;
-  const pt = e => { const b = cv.getBoundingClientRect(); return { x: e.clientX - b.left, y: e.clientY - b.top, p: e.pressure || .5 }; };
+
+  // strokes: quadratic curves through midpoints, width follows Pencil pressure
+  let active = null, box = null, a = null, b = null; // a, b = last two points
+  const pt = e => ({ x: e.clientX - box.left, y: e.clientY - box.top,
+    w: erasing ? size[2] : size[1] * (e.pointerType === "pen" && e.pressure ? .35 + e.pressure * 1.3 : 1) });
+  const mid = (p, q) => ({ x: (p.x + q.x) / 2, y: (p.y + q.y) / 2, w: (p.w + q.w) / 2 });
+  const ink = () => { ctx.globalCompositeOperation = erasing ? "destination-out" : "source-over"; ctx.strokeStyle = ctx.fillStyle = color; };
+  const seg = (from, ctrl, to) => { ctx.lineWidth = (from.w + to.w) / 2; ctx.beginPath(); ctx.moveTo(from.x, from.y); ctx.quadraticCurveTo(ctrl.x, ctrl.y, to.x, to.y); ctx.stroke(); };
+
+  // Safari: keep the Pencil from scrolling the page; in pen mode, let fingers scroll
+  cv.addEventListener("touchstart", e => { if (!penMode || [...e.changedTouches].some(t => t.touchType === "stylus")) e.preventDefault(); }, { passive: false });
+  cv.addEventListener("touchmove", e => { if (active !== null && [...e.touches].some(t => t.touchType === "stylus")) e.preventDefault(); }, { passive: false });
+  cv.oncontextmenu = e => e.preventDefault();
+
   cv.onpointerdown = e => {
+    if (e.pointerType === "pen") setPen();
+    else if (penMode && e.pointerType === "touch") return; // palm or finger
+    if (active !== null || e.button > 0) return;
+    e.preventDefault();
+    active = e.pointerId;
     try { cv.setPointerCapture(e.pointerId); } catch {}
-    history.push(ctx.getImageData(0, 0, cv.width, cv.height)); if (history.length > 30) history.shift();
-    last = pt(e);
+    snap();
+    box = cv.getBoundingClientRect();
+    a = b = pt(e);
+    ink(); ctx.beginPath(); ctx.arc(b.x, b.y, b.w / 2, 0, Math.PI * 2); ctx.fill(); // a tap leaves a dot
   };
   cv.onpointermove = e => {
-    if (!last) return;
-    for (const ev of (e.getCoalescedEvents ? e.getCoalescedEvents() : [e])) {
+    if (e.pointerId !== active) return;
+    ink();
+    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+    for (const ev of (evs.length ? evs : [e])) {
       const p = pt(ev);
-      ctx.globalCompositeOperation = erasing ? "destination-out" : "source-over";
-      ctx.strokeStyle = color;
-      ctx.lineWidth = erasing ? 22 : 2.6 * (e.pointerType === "pen" ? .4 + p.p * 1.6 : 1);
-      ctx.beginPath(); ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
-      last = p;
+      if (Math.hypot(p.x - b.x, p.y - b.y) < .5) continue;
+      seg(mid(a, b), b, mid(b, p));
+      a = b; b = p;
     }
   };
-  cv.onpointerup = cv.onpointercancel = () => { if (last) store(); last = null; };
+  cv.onpointerup = cv.onpointercancel = e => {
+    if (e.pointerId !== active) return;
+    ink(); seg(mid(a, b), b, b);
+    active = null; store();
+  };
 }
 
 // ---------- intentions ----------
