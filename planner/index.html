@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- Nothing on this page talks to a server: plans live only in this browser. -->
+<!-- On kjournal.org nothing on this page talks to a server: plans live only in this browser. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'">
-<meta name="description" content="aura planner: a free, private daily planner with a pomodoro timer, tasks, an hourly plan, goals, and calming tools. Everything stays on your device.">
+<meta name="description" content="aura planner: a free, private daily planner with a pomodoro timer, tasks, an hourly plan, goals, and calming tools.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="aura">
 <link rel="icon" type="image/png" sizes="32x32" href="/kjournal-icon-32.png">
@@ -14,212 +14,322 @@
 <title>aura planner</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-/* layout: kjournal's single column. Aura mast, aura section bars, cards, fixed bottom tabs. */
+/* layout: one calm column over a fixed aura glow; frosted cards; floating tab bar. */
 :root{
-  --ink:#2c2740; --mute:#5f5873; --line:#e3dcec; --line-strong:#b7adc8; --paper:#fbf8fd; --card:#fffdff;
-  --r:#7a3ea8; --focus:#2b5fa8; --danger:#b3243a; --tint:#f2eafb; --on-aura:#2c2740; --pill:rgba(255,255,255,.5);
+  --bg:#f7f4fb; --glass:rgba(255,255,255,.74); --solid:#ffffff; --ink:#241f35; --mute:#5f5874;
+  --line:rgba(60,40,90,.10); --line-strong:rgba(60,40,90,.24); --r:#7a3ea8; --focus:#2b5fa8; --danger:#b3243a;
+  --tint:rgba(122,62,168,.09); --on-aura:#241f35;
+  --shadow:0 1px 2px rgba(40,20,70,.05),0 10px 30px rgba(40,20,70,.07);
+  --glow:radial-gradient(45% 38% at 0% 0%,rgba(255,170,205,.55),transparent 70%),radial-gradient(42% 36% at 100% 4%,rgba(190,170,255,.5),transparent 70%),radial-gradient(48% 40% at 100% 100%,rgba(150,215,255,.45),transparent 70%),radial-gradient(48% 40% at 0% 100%,rgba(175,240,210,.45),transparent 70%);
   --aura:radial-gradient(at 10% 15%,#ffbfd6 0,transparent 55%),radial-gradient(at 88% 8%,#cdb9ff 0,transparent 52%),radial-gradient(at 75% 95%,#a9e2ff 0,transparent 55%),radial-gradient(at 25% 100%,#c2f2d6 0,transparent 50%),#ffe2c9;
-  --aura-line:linear-gradient(90deg,#ffc2d8,#ffd9b8 26%,#dac6ff 55%,#b6dcff 80%,#c0efdc);
+  --aura-line:linear-gradient(100deg,#ffc2d8,#ffd9b8 28%,#dac6ff 58%,#b6dcff 82%,#c0efdc);
+  --check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='%23241f35' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --sans:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;
-  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
+  --round:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --ink:#ece8f6; --mute:#aaa2bd; --line:#332d45; --line-strong:#5b5172; --paper:#15121e; --card:#1e1a2a;
-  --r:#c9a3ff; --focus:#8ab4ff; --danger:#ff8a9b; --tint:#2a2140; --on-aura:#fff; --pill:rgba(0,0,0,.28);
+  --bg:#13101c; --glass:rgba(32,27,46,.68); --solid:#1f1a2c; --ink:#efebf8; --mute:#aca4bf;
+  --line:rgba(220,200,255,.10); --line-strong:rgba(220,200,255,.24); --r:#c9a3ff; --focus:#8ab4ff; --danger:#ff8a9b;
+  --tint:rgba(201,163,255,.12); --on-aura:#ffffff;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.3);
+  --glow:radial-gradient(45% 38% at 0% 0%,rgba(160,50,115,.38),transparent 70%),radial-gradient(42% 36% at 100% 4%,rgba(95,65,200,.38),transparent 70%),radial-gradient(48% 40% at 100% 100%,rgba(30,105,160,.36),transparent 70%),radial-gradient(48% 40% at 0% 100%,rgba(30,125,95,.32),transparent 70%);
   --aura:radial-gradient(at 10% 15%,#7a2d5c 0,transparent 55%),radial-gradient(at 88% 8%,#4a35a0 0,transparent 52%),radial-gradient(at 75% 95%,#175a85 0,transparent 55%),radial-gradient(at 25% 100%,#16634f 0,transparent 50%),#3a1f45;
-  --aura-line:linear-gradient(90deg,#74295a,#6d3a3a 26%,#4f3a98 55%,#1d5a80 80%,#1b6552);
+  --aura-line:linear-gradient(100deg,#7d2c60,#74403e 28%,#5340a0 58%,#1f5f88 82%,#1c6a56);
+  --check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='%23ffffff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   color-scheme:dark}}
 :root[data-theme="dark"]{
-  --ink:#ece8f6; --mute:#aaa2bd; --line:#332d45; --line-strong:#5b5172; --paper:#15121e; --card:#1e1a2a;
-  --r:#c9a3ff; --focus:#8ab4ff; --danger:#ff8a9b; --tint:#2a2140; --on-aura:#fff; --pill:rgba(0,0,0,.28);
+  --bg:#13101c; --glass:rgba(32,27,46,.68); --solid:#1f1a2c; --ink:#efebf8; --mute:#aca4bf;
+  --line:rgba(220,200,255,.10); --line-strong:rgba(220,200,255,.24); --r:#c9a3ff; --focus:#8ab4ff; --danger:#ff8a9b;
+  --tint:rgba(201,163,255,.12); --on-aura:#ffffff;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.3);
+  --glow:radial-gradient(45% 38% at 0% 0%,rgba(160,50,115,.38),transparent 70%),radial-gradient(42% 36% at 100% 4%,rgba(95,65,200,.38),transparent 70%),radial-gradient(48% 40% at 100% 100%,rgba(30,105,160,.36),transparent 70%),radial-gradient(48% 40% at 0% 100%,rgba(30,125,95,.32),transparent 70%);
   --aura:radial-gradient(at 10% 15%,#7a2d5c 0,transparent 55%),radial-gradient(at 88% 8%,#4a35a0 0,transparent 52%),radial-gradient(at 75% 95%,#175a85 0,transparent 55%),radial-gradient(at 25% 100%,#16634f 0,transparent 50%),#3a1f45;
-  --aura-line:linear-gradient(90deg,#74295a,#6d3a3a 26%,#4f3a98 55%,#1d5a80 80%,#1b6552);
+  --aura-line:linear-gradient(100deg,#7d2c60,#74403e 28%,#5340a0 58%,#1f5f88 82%,#1c6a56);
+  --check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='%23ffffff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   color-scheme:dark}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--paper);color:var(--ink);font:1rem/1.45 var(--sans)}
+body{margin:0;background:var(--bg);color:var(--ink);font:1rem/1.45 var(--sans);-webkit-tap-highlight-color:transparent}
+.glow{position:fixed;inset:0;background:var(--glow);pointer-events:none;z-index:0}
 button,input,textarea{font:inherit;color:inherit}
 a{color:var(--r);text-underline-offset:3px}
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.skip{position:absolute;left:var(--s4);top:-60px;background:var(--ink);color:var(--paper);padding:var(--s2) var(--s4);z-index:20;border-radius:10px}
-.skip:focus{top:var(--s4)}
-.wrap{max-width:820px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-main.wrap{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+.skip{position:absolute;left:16px;top:-60px;background:var(--ink);color:var(--bg);padding:8px 16px;z-index:40;border-radius:10px}
+.skip:focus{top:16px}
+.wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main.wrap{padding-bottom:calc(120px + env(safe-area-inset-bottom,0px))}
 
-.mast{background:var(--aura);color:var(--on-aura);padding-block:28px 26px}
-.mast h1{margin:0;font-size:clamp(30px,7vw,46px);line-height:1;letter-spacing:-.02em;text-transform:lowercase}
-.mast p{margin:8px 0 0}
-.mast .note{display:inline-block;margin-top:14px;font-size:.85rem;background:var(--pill);padding:5px 12px;border-radius:99px}
-.logo{display:block;width:40px;height:40px;margin-bottom:18px;border-radius:11px;background:var(--aura);box-shadow:0 0 0 2px rgba(255,255,255,.85),0 4px 14px rgba(0,0,0,.14)}
+/* header */
+.mast{padding-block:22px 4px}
+.brand{display:flex;align-items:center;gap:10px;font:700 1rem var(--round);letter-spacing:.01em}
+.orbmark{width:28px;height:28px;border-radius:50%;background:var(--aura);box-shadow:0 0 0 2px var(--glass),0 4px 14px rgba(150,110,220,.35)}
+.brand .spacer{flex:1}
+.sync{display:inline-flex;align-items:center;gap:6px;font:600 .75rem var(--sans);color:var(--mute);background:var(--glass);border:1px solid var(--line);border-radius:99px;padding:5px 10px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--line-strong)}
+.sync[data-s=ok] i{background:#2fae7a}.sync[data-s=wait] i{background:#e3a43a}
+.mast h1{margin:22px 0 2px;font:700 clamp(28px,7vw,38px)/1.1 var(--round);letter-spacing:-.02em;text-wrap:balance}
+.mast p{margin:0;color:var(--mute)}
 
-.sec{background:var(--aura-line);color:var(--on-aura);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--s3);padding:10px 14px;margin:26px 0 14px;border-radius:4px}
-.sec h2{margin:0;font-size:.95rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-.sec .eyebrow{color:inherit}
-.eyebrow{font-weight:700;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
-.lede{color:var(--mute);margin:0 0 var(--s4)}
-.day{display:flex;align-items:center;gap:4px}
-.day button{min-width:40px;min-height:36px;border:0;border-radius:8px;background:var(--pill);color:inherit;font-size:1.1rem;cursor:pointer}
-.day span{font-weight:700;font-size:.85rem;padding:0 6px;white-space:nowrap}
+/* sections */
+.sec{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin:30px 0 12px}
+.sec h2{margin:0;font:700 1.45rem/1.15 var(--round);letter-spacing:-.01em}
+.eyebrow{font-weight:600;font-size:.8rem;color:var(--mute)}
+.lede{color:var(--mute);margin:0 0 14px}
+.day{display:flex;align-items:center;gap:2px;background:var(--glass);border:1px solid var(--line);border-radius:99px;padding:3px;box-shadow:var(--shadow);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.day button{min-width:38px;min-height:38px;border:0;border-radius:99px;background:none;font-size:1.15rem;cursor:pointer;color:var(--ink)}
+.day button:hover{background:var(--tint)}
+.day span{font-weight:700;font-size:.88rem;padding:0 6px;white-space:nowrap}
+.day .tod{font-size:.78rem;font-weight:700;padding:0 12px;background:var(--tint);color:var(--r)}
 
-.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
-.box h3{margin:0;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase}
-.box .hint{color:var(--mute);font-size:.9rem;margin:2px 0 8px}
+.box{background:var(--glass);border:1px solid var(--line);border-radius:22px;padding:18px;margin:12px 0;box-shadow:var(--shadow);backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2)}
+.box h3{margin:0;font:650 1.02rem/1.3 var(--round)}
+.box .hint{color:var(--mute);font-size:.9rem;margin:3px 0 10px}
 .bh{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
 
-.field{display:grid;grid-template-columns:minmax(8rem,auto) 1fr;align-items:end;gap:12px;margin:12px 0}
-.field label{font-size:.75rem;font-weight:700;letter-spacing:.06em;color:var(--mute);text-transform:uppercase;padding-bottom:6px}
-.field input,input.line{border:0;border-bottom:1px solid var(--line-strong);background:none;padding:6px 2px;min-height:44px;font-size:1.05rem;border-radius:0;width:100%;min-width:0}
-.slider{margin:var(--s4) 0}
-.slider label{display:flex;justify-content:space-between;font-size:.75rem;font-weight:700;letter-spacing:.06em;color:var(--mute);text-transform:uppercase}
-.slider output{font-size:1rem;letter-spacing:0;text-transform:none;color:var(--ink)}
-input[type=range]{width:100%;min-height:44px;accent-color:var(--r)}
-input[type=checkbox]{width:24px;height:24px;accent-color:var(--r);margin:10px;flex:none;cursor:pointer}
-textarea.lined{display:block;width:100%;border:0;resize:vertical;min-height:170px;background:transparent repeating-linear-gradient(transparent 0 31px,var(--line) 31px 32px);line-height:32px;padding:0 2px;font-size:1.05rem}
+.field{display:grid;grid-template-columns:minmax(8rem,auto) 1fr;align-items:center;gap:12px;margin:8px 0}
+.field label{font-size:.85rem;font-weight:600;color:var(--mute)}
+.field input,input.line{border:1px solid var(--line);background:var(--tint);padding:8px 12px;min-height:44px;font-size:1rem;border-radius:12px;width:100%;min-width:0}
+.field input:focus,input.line:focus{border-color:var(--r);outline:none;box-shadow:0 0 0 3px var(--tint)}
+.slider{margin:6px 0 14px}
+.slider label{display:flex;justify-content:space-between;font-size:.9rem;font-weight:600;color:var(--mute)}
+.slider output{color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;min-height:40px;accent-color:var(--r)}
+input[type=checkbox]{appearance:none;-webkit-appearance:none;width:24px;height:24px;border-radius:50%;border:2px solid var(--line-strong);margin:10px;flex:none;cursor:pointer;background:none;transition:background .15s,border-color .15s}
+input[type=checkbox]:checked{border-color:transparent;background:var(--check) center/16px no-repeat,var(--aura-line)}
+textarea.lined{display:block;width:100%;border:0;resize:vertical;min-height:150px;background:transparent repeating-linear-gradient(transparent 0 31px,var(--line) 31px 32px);line-height:32px;padding:0 2px;font-size:1.02rem}
 textarea.lined:focus-visible{outline-offset:6px}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border:1px solid transparent;border-radius:99px;padding:0 18px;background:var(--ink);color:var(--paper);font-weight:600;cursor:pointer;text-decoration:none}
-.btn.aura{background:var(--aura-line);color:var(--on-aura)}
-.btn.quiet{background:var(--card);color:var(--ink);border-color:var(--line-strong)}
-.btn.danger{background:var(--card);color:var(--danger);border-color:var(--danger)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border:1px solid transparent;border-radius:99px;padding:0 20px;background:var(--ink);color:var(--bg);font-weight:650;cursor:pointer;text-decoration:none;transition:transform .12s}
+.btn:active{transform:scale(.97)}
+.btn.aura{background:var(--aura-line);color:var(--on-aura);box-shadow:0 6px 18px rgba(150,110,220,.28)}
+.btn.quiet{background:var(--glass);color:var(--ink);border-color:var(--line-strong)}
+.btn.danger{background:none;color:var(--danger);border-color:var(--danger)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .row.c{justify-content:center}
 .spacer{flex:1}
-.empty{color:var(--mute);text-align:center;padding:20px 0;margin:0}
-footer.foot{color:var(--mute);font-size:.85rem;margin-top:40px;border-top:1px solid var(--line);padding-top:14px}
-footer.foot p{margin:0 0 8px}
+.empty{color:var(--mute);text-align:center;padding:18px 0;margin:0;list-style:none}
+footer.foot{color:var(--mute);font-size:.82rem;margin-top:36px;padding-top:4px}
+footer.foot p{margin:0 0 6px}
 footer.foot strong{color:var(--ink)}
 
 /* pomodoro */
-.modes{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:12px 0 4px}
-.chip{border:1px solid var(--line-strong);background:var(--card);border-radius:99px;padding:0 14px;min-height:40px;font-size:.9rem;cursor:pointer}
-.chip[aria-pressed=true]{background:var(--tint);border-color:var(--r);color:var(--r);font-weight:700}
-.ring{position:relative;width:min(250px,68vw);aspect-ratio:1;max-width:100%;margin:8px auto}
+.modes{display:flex;gap:4px;justify-content:center;margin:14px auto 4px;background:var(--tint);border-radius:99px;padding:4px;width:max-content;max-width:100%}
+.chip{border:0;background:none;border-radius:99px;padding:0 14px;min-height:38px;font-size:.88rem;font-weight:600;cursor:pointer;color:var(--mute)}
+.chip[aria-pressed=true]{background:var(--solid);color:var(--ink);box-shadow:0 1px 4px rgba(40,20,70,.12)}
+.ring{position:relative;width:min(240px,66vw);aspect-ratio:1;max-width:100%;margin:10px auto}
 .ring::before{content:"";position:absolute;inset:14%;border-radius:50%;background:var(--aura);filter:blur(26px);opacity:.6}
 .ring.on::before{animation:glow 6s ease-in-out infinite}
 @keyframes glow{50%{opacity:.95;transform:scale(1.08)}}
 .ring svg{position:absolute;inset:0;width:100%;height:100%}
-.ring circle{fill:none;stroke-width:7}
+.ring circle{fill:none;stroke-width:6}
 .trk{stroke:var(--line)}
 .prog{stroke:url(#ag);stroke-linecap:round;transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset .5s linear}
 .clock{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:18%}
-#clock{font-size:clamp(42px,12vw,60px);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1}
+#clock{font:700 clamp(42px,12vw,58px)/1 var(--round);font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 #ctask{color:var(--mute);font-size:.85rem;margin-top:6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .ptip{color:var(--mute);font-size:.9rem;text-align:center;margin:12px 0 0}
-.nudge{background:var(--card);border:1px solid var(--r);border-radius:16px;padding:12px 16px;margin:14px 0;display:grid;gap:2px}
+.nudge{background:var(--glass);border:1px solid var(--line);border-radius:18px;padding:12px 16px 12px 20px;margin:12px 0;display:grid;gap:2px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.nudge::before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:var(--aura-line)}
 .nudge .eyebrow{color:var(--r)}
 
 /* tasks */
-.add{display:flex;gap:8px;margin:8px 0}
+.add{display:flex;gap:8px;margin:8px 0 4px}
 .add input{flex:1;min-width:0}
-.tasks,.hours,.goals{list-style:none;margin:8px 0 0;padding:0}
-.task{display:flex;flex-wrap:wrap;align-items:center;gap:2px;border-bottom:1px solid var(--line);padding:2px 0}
-.task.top{background:linear-gradient(90deg,var(--tint),transparent 75%);border-radius:10px}
-.task .tt{flex:1 1 9rem;min-width:0;border:0;background:none;font-size:1.02rem;padding:8px 2px;min-height:44px}
+.tasks,.hours,.goals{list-style:none;margin:6px 0 0;padding:0}
+.task{display:flex;flex-wrap:wrap;align-items:center;gap:2px;border-radius:14px;padding:2px 0;transition:background .15s}
+.task:hover{background:var(--tint)}
+.task.top{background:linear-gradient(90deg,var(--tint),transparent 80%)}
+.task .tt{flex:1 1 9rem;min-width:0;border:0;background:none;font-size:1.02rem;padding:8px 6px;min-height:44px;border-radius:10px}
+.task .tt:focus,.goal input:focus{outline:none;background:var(--solid);box-shadow:0 0 0 2px var(--r)}
 .task.done .tt{text-decoration:line-through;color:var(--mute)}
-.acts{display:flex;margin-left:auto}
-.ic{min-width:44px;min-height:44px;border:0;background:none;border-radius:10px;cursor:pointer;color:var(--mute);font-size:1.05rem;display:inline-grid;place-items:center;padding:0 6px}
-.ic:hover{background:var(--tint)}
+.acts{display:flex;align-items:center;margin-left:auto}
+.ic{min-width:42px;min-height:42px;border:0;background:none;border-radius:12px;cursor:pointer;color:var(--mute);font-size:1.05rem;display:inline-grid;place-items:center;padding:0 6px}
+.ic:hover{background:var(--tint);color:var(--ink)}
 .ic.star[aria-pressed=true]{color:var(--r)}
-.ic.go{color:var(--r);font-size:.8rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-.ic.go[aria-pressed=true]{background:var(--tint)}
-.dots{font-size:.75rem;letter-spacing:2px;color:var(--r);font-variant-numeric:tabular-nums}
+.ic.go{color:var(--r);font-size:.78rem;font-weight:700}
+.ic.go[aria-pressed=true]{background:var(--aura-line);color:var(--on-aura)}
+.dots{font-size:.72rem;letter-spacing:2px;color:var(--r);font-variant-numeric:tabular-nums}
+.when{font-size:.72rem;font-weight:700;color:var(--r);background:var(--tint);border-radius:99px;padding:3px 9px;white-space:nowrap}
 
-/* hours */
-.hr{display:grid;grid-template-columns:4.75rem 1fr;align-items:center;border-bottom:1px solid var(--line);padding:0 6px}
-.hr .t{font-size:.75rem;font-weight:700;letter-spacing:.06em;color:var(--mute);text-transform:uppercase;font-variant-numeric:tabular-nums}
-.hr input{border:0;background:none;min-height:48px;font-size:1.02rem;padding:6px 4px;width:100%;min-width:0}
-.hr.past input{color:var(--mute)}
-.hr.now{background:var(--tint);border-radius:10px;border-bottom-color:transparent}
+/* hours: a timeline */
+.hours{margin-top:4px}
+.hr{display:grid;grid-template-columns:4.2rem 1fr;align-items:start}
+.hr .t{font-size:.78rem;font-weight:700;color:var(--mute);font-variant-numeric:tabular-nums;padding-top:15px;text-align:right;padding-right:14px}
+.hd{position:relative;border-left:2px solid var(--line);padding:4px 0 4px 14px;min-width:0;min-height:52px}
+.hd::before{content:"";position:absolute;left:-7px;top:17px;width:12px;height:12px;border-radius:50%;background:var(--solid);border:2px solid var(--line-strong)}
+.hr.past .hd input{color:var(--mute)}
+.hr.past .hd::before{background:var(--line-strong)}
 .hr.now .t{color:var(--r)}
-
-.hr{align-items:start}.hr .t{padding-top:16px}
-.pchip{display:flex;align-items:center;background:var(--card);border:1px solid var(--line-strong);border-radius:12px;margin:4px 0;min-height:44px;max-width:100%}
-.hr .pchip{background:var(--aura-line);border-color:transparent;color:var(--on-aura)}
-.pchip .ct{flex:1;min-width:0;border:0;background:none;padding:8px 8px 8px 0;font-size:1rem;color:inherit}
-.pchip.done .ct{text-decoration:line-through;opacity:.7}
-.grip{min-width:40px;min-height:44px;border:0;background:none;cursor:grab;touch-action:none;color:inherit;font-size:1.1rem;opacity:.75;padding:0}
-.ghost{position:fixed;left:0;top:0;z-index:30;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.25);margin:0}
-.lift{opacity:.35}
-.drop{border-radius:10px;transition:background .15s}
+.hr.now .hd{border-left-color:var(--r)}
+.hr.now .hd::before{background:var(--aura-line);border-color:transparent;box-shadow:0 0 0 4px var(--tint)}
+.hd input[data-h]{border:0;background:none;min-height:44px;font-size:1rem;padding:6px 8px;width:100%;min-width:0;border-radius:10px}
+.hd input[data-h]:focus{background:var(--tint);outline:none}
+.pchip{display:flex;align-items:center;background:var(--glass);border:1px solid var(--line-strong);border-radius:14px;margin:4px 0;min-height:44px;max-width:100%;box-shadow:var(--shadow)}
+.pchip:focus-within{box-shadow:0 0 0 2px var(--r)}
+.hd .pchip{background:var(--aura-line);border-color:transparent;color:var(--on-aura)}
+.pchip .ct{flex:1;min-width:0;border:0;background:none;padding:8px 10px 8px 0;font-size:1rem;color:inherit;font-weight:550}
+.pchip .ct:focus{outline:none}
+.pchip.done .ct{text-decoration:line-through;opacity:.65}
+.grip{min-width:40px;min-height:44px;border:0;background:none;cursor:grab;touch-action:none;color:inherit;font-size:1.1rem;opacity:.6;padding:0}
+.ghost{position:fixed;left:0;top:0;z-index:50;pointer-events:none;box-shadow:0 16px 40px rgba(40,20,70,.28);margin:0;background:var(--aura-line);color:var(--on-aura);border-color:transparent}
+.lift{opacity:.3}
+.drop{border-radius:14px;transition:background .15s}
 .drop.over{background:var(--tint);outline:2px dashed var(--r);outline-offset:2px}
 .trayd{min-height:52px;padding:2px}
 .trayd .chips:empty::after{content:"Everything on your list has a time.";color:var(--mute);display:block;padding:10px 4px}
-.hd{padding:4px 0;min-width:0}
-.when{font-size:.72rem;font-weight:700;color:var(--r);background:var(--tint);border-radius:99px;padding:2px 8px;white-space:nowrap}
 
 /* goals */
-.goal{display:flex;align-items:flex-start;gap:4px;border-bottom:1px solid var(--line);padding:4px 0}
-.goal .gf{flex:1;min-width:0;display:grid}
-.goal input.gt{font-weight:700;border:0;background:none;min-height:40px;font-size:1.02rem;padding:6px 2px}
-.goal input.gs{border:0;background:none;min-height:36px;font-size:.92rem;color:var(--mute);padding:2px 2px 8px}
+.goal{display:flex;align-items:flex-start;gap:4px;border-radius:14px;padding:2px 0}
+.goal:hover{background:var(--tint)}
+.goal .gf{flex:1;min-width:0;display:grid;gap:2px}
+.goal input.gt{font-weight:650;border:0;background:none;min-height:40px;font-size:1.02rem;padding:6px 6px;border-radius:10px}
+.goal input.gs{border:0;background:none;min-height:34px;font-size:.92rem;color:var(--mute);padding:0 6px 8px;border-radius:10px}
 .goal.done input.gt{text-decoration:line-through;color:var(--mute)}
 
 /* calm */
 .breathe{display:grid;place-items:center;gap:12px;padding:8px 0}
-.orb{width:150px;height:150px;max-width:100%;border-radius:50%;background:var(--aura);transform:scale(.62);transition:transform 4s ease-in-out;display:grid;place-items:center;box-shadow:0 0 40px rgba(160,120,220,.35)}
+.orb{width:150px;height:150px;max-width:100%;border-radius:50%;background:var(--aura);transform:scale(.62);transition:transform 4s ease-in-out;display:grid;place-items:center;box-shadow:0 0 50px rgba(160,120,220,.4)}
 .orb.in{transform:scale(1)}
-.orb b{font-size:1.6rem;font-variant-numeric:tabular-nums;color:var(--on-aura)}
-#bphase{font-weight:700;min-height:1.5em}
-.g5{display:grid;gap:4px}
-.g5 .field{grid-template-columns:minmax(9.5rem,auto) 1fr;margin:4px 0}
+.orb b{font:700 1.6rem var(--round);font-variant-numeric:tabular-nums;color:var(--on-aura)}
+#bphase{font-weight:700;min-height:1.5em;margin:0}
+.g5 .field{grid-template-columns:minmax(9.5rem,auto) 1fr;margin:6px 0}
 
-nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);z-index:5;padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px))}
-nav.tabs ul{display:flex;justify-content:center;gap:2px;max-width:820px;margin:0 auto;padding:0;list-style:none}
-nav.tabs li{flex:1;max-width:150px}
-nav.tabs a{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:10px;font-size:.85rem;color:var(--mute);text-decoration:none}
-nav.tabs a[aria-current=page]{color:var(--r);font-weight:700;background:var(--tint)}
-.toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 14px;border-radius:99px;font-size:.85rem;opacity:0;transition:opacity .2s;pointer-events:none;max-width:calc(100% - 32px);text-align:center;z-index:9}
-.toast.on{opacity:1}
-@media (max-width:480px){.field,.g5 .field{grid-template-columns:1fr;gap:0}}
+/* floating tab bar */
+nav.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom,0px));width:min(520px,calc(100% - 24px));z-index:20;background:var(--glass);border:1px solid var(--line);border-radius:26px;padding:6px;box-shadow:0 12px 40px rgba(40,20,70,.18);backdrop-filter:blur(20px) saturate(1.4);-webkit-backdrop-filter:blur(20px) saturate(1.4)}
+nav.tabs ul{display:flex;gap:2px;margin:0;padding:0;list-style:none}
+nav.tabs li{flex:1}
+nav.tabs a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:50px;border-radius:20px;font-size:.7rem;font-weight:600;color:var(--mute);text-decoration:none;transition:background .2s,color .2s}
+nav.tabs svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs a[aria-current=page]{color:var(--on-aura);background:var(--aura-line)}
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom,0px));transform:translate(-50%,8px);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:99px;font-size:.85rem;font-weight:600;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;max-width:calc(100% - 32px);text-align:center;z-index:30}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.enter>*{animation:rise .35s ease both}
+.enter>*:nth-child(2){animation-delay:.04s}.enter>*:nth-child(3){animation-delay:.08s}.enter>*:nth-child(n+4){animation-delay:.12s}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+@media (max-width:480px){.field,.g5 .field{grid-template-columns:1fr;gap:4px}}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}.orb{transform:none}}
 </style>
 </head>
 <body>
+<div class="glow" aria-hidden="true"></div>
 <a class="skip" href="#app">Skip to content</a>
-<header class="mast"><div class="wrap">
-  <span class="logo" aria-hidden="true"></span>
-  <h1>aura planner</h1>
-  <p>one thing at a time. come back gently.</p>
-  <p class="note">Your plans are saved only on this device. Nothing is uploaded.</p>
-</div></header>
+<header class="mast wrap">
+  <div class="brand"><span class="orbmark" aria-hidden="true"></span>aura<span class="spacer"></span><span class="sync" id="sync" data-s="local" role="status"><i></i><span>On this device</span></span></div>
+  <h1 id="hello">Hello</h1>
+  <p id="today-line"></p>
+</header>
 
 <main class="wrap" id="app" tabindex="-1"></main>
 
 <nav class="tabs" aria-label="Planner sections"><ul>
-  <li><a href="#today" data-v="today">Today</a></li>
-  <li><a href="#plan" data-v="plan">Plan</a></li>
-  <li><a href="#goals" data-v="goals">Goals</a></li>
-  <li><a href="#calm" data-v="calm">Calm</a></li>
-  <li><a href="#more" data-v="more">More</a></li>
+  <li><a href="#today" data-v="today"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.5 12h2M19.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Today</a></li>
+  <li><a href="#plan" data-v="plan"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Plan</a></li>
+  <li><a href="#goals" data-v="goals"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Goals</a></li>
+  <li><a href="#calm" data-v="calm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg>Calm</a></li>
+  <li><a href="#more" data-v="more"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>More</a></li>
 </ul></nav>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 "use strict";
 const OWNER = "GTLLco";
+const CALM = ["mood", "energy", "safe", "ground", "wins", "helped"];
 
-// ---------- storage: IndexedDB in this browser only, memory if the browser blocks it ----------
+// ---------- storage ----------
+// Memory is the source of truth while the page is open.
+// Local: an IndexedDB copy in this browser (works offline, and is all there is on kjournal.org).
+// Cloud: opened on claude.ai, a private store under the viewer's own account syncs every device.
 const DB = (() => {
-  let dbp, broken = false; const mem = new Map();
-  const open = () => dbp ||= new Promise((res, rej) => {
+  const mem = new Map();
+  let idbp, idbBroken = false;
+  const idb = () => idbp ||= new Promise((res, rej) => {
     const r = indexedDB.open("aura-planner", 1);
     r.onupgradeneeded = () => r.result.createObjectStore("kv");
     r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
   });
-  const tx = async (mode, fn) => { const db = await open(); return new Promise((res, rej) => {
-    const t = db.transaction("kv", mode); const out = fn(t.objectStore("kv"));
-    t.oncomplete = () => res(out && out.result); t.onerror = () => rej(t.error); }); };
-  const fail = () => { if (!broken) { broken = true; setTimeout(() => toast("This browser is blocking storage. Changes won't be kept."), 300); } };
-  const safe = async (fn, fb) => { if (!broken) { try { return await fn(); } catch { fail(); } } return fb(); };
+  const itx = async (mode, fn) => {
+    if (idbBroken) return;
+    try { const db = await idb(); return await new Promise((res, rej) => {
+      const t = db.transaction("kv", mode); const out = fn(t.objectStore("kv"));
+      t.oncomplete = () => res(out && out.result); t.onerror = () => rej(t.error); });
+    } catch { idbBroken = true; }
+  };
+  const loadLocal = async () => {
+    const keys = await itx("readonly", s => s.getAllKeys()), vals = await itx("readonly", s => s.getAll());
+    if (keys && vals) keys.forEach((k, i) => mem.set(k, vals[i]));
+  };
+
+  // cloud
+  let col = null, ready = false; const pend = new Map(), busy = new Set(), known = new Set();
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  const pick = (o, ks) => Object.fromEntries(ks.filter(k => o && k in o).map(k => [k, o[k]]));
+  const omit = (o, ks) => Object.fromEntries(Object.entries(o).filter(([k]) => !ks.includes(k)));
+  const syncCalm = () => S.syncCalm !== false;
+  const cloudable = k => !(k === "safe" && !syncCalm());
+  const body = (k, v) => ({ v: k.startsWith("day:") && !syncCalm() && v ? omit(v, CALM) : v });
+  async function pump(k){
+    if (busy.has(k) || !col) return;
+    busy.add(k);
+    while (pend.has(k)) {
+      const v = pend.get(k); pend.delete(k);
+      try {
+        if (v === undefined || !cloudable(k)) { if (known.has(k)) await col.doc(k).delete(); known.delete(k); }
+        else { await col.doc(k).set(body(k, v)); known.add(k); }
+      } catch (e) {
+        if (e && e.code === "unavailable") { await new Promise(r => setTimeout(r, 800 + Math.random() * 800)); if (!pend.has(k)) pend.set(k, v); }
+        else if (e && e.code === "quota_exceeded") toast("Sync storage is full. Erase old data from More.");
+        else status("wait", "Sync paused");
+      }
+    }
+    busy.delete(k);
+  }
+  const push = (k, v) => { if (!col) return; pend.set(k, v); pump(k); };
+
+  function onRemote(snap){
+    const changed = [];
+    for (const ch of snap.docChanges()) {
+      const k = ch.doc.id;
+      if (ch.type === "removed") {
+        known.delete(k);
+        if (!busy.has(k) && !pend.has(k) && ready && mem.has(k)) { mem.delete(k); itx("readwrite", s => s.delete(k)); changed.push(k); }
+        continue;
+      }
+      known.add(k);
+      if (busy.has(k) || pend.has(k) || ch.doc.metadata.hasPendingWrites) continue;
+      let v = ch.doc.data()?.v;
+      if (k.startsWith("day:") && !syncCalm() && v) v = { ...v, ...pick(mem.get(k), CALM) };
+      if (same(v, mem.get(k))) continue;
+      mem.set(k, v); itx("readwrite", s => s.put(v, k)); changed.push(k);
+    }
+    if (!ready && !snap.metadata.fromCache) {
+      ready = true; clearTimeout(onRemote.t);
+      for (const [k, v] of mem) if (!known.has(k) && cloudable(k)) push(k, v); // first sync: move this device's data up
+      status("ok", "Synced");
+    }
+    if (changed.length) onChange(changed);
+  }
+  async function connect(){
+    if (!window.claude?.use) return;
+    status("wait", "Connecting");
+    const t = ms => new Promise(r => setTimeout(() => r(null), ms));
+    try {
+      const [db, user] = await Promise.all([Promise.race([claude.use("db"), t(10000)]), Promise.race([claude.use("user"), t(10000)])]);
+      const id = db && user ? await user.id() : null;
+      if (!id) return status("local", "On this device");
+      col = db.collection("data/users/" + id);
+      onRemote.t = setTimeout(() => { if (!ready) status("wait", "Can't reach sync yet"); }, 10000);
+      col.onSnapshot(onRemote, () => { col = null; status("wait", "Sync stopped. Reload to retry."); });
+    } catch { status("local", "On this device"); }
+  }
   return {
-    get: k => safe(() => tx("readonly", s => s.get(k)), () => mem.get(k)),
-    set: (k, v) => { mem.set(k, v); return safe(() => tx("readwrite", s => s.put(v, k)), () => {}); },
-    all: () => safe(async () => { const db = await open(); return new Promise((res, rej) => {
-      const out = {}; const c = db.transaction("kv").objectStore("kv").openCursor();
-      c.onsuccess = () => { const cur = c.result; if (cur) { out[cur.key] = cur.value; cur.continue(); } else res(out); };
-      c.onerror = () => rej(c.error); }); }, () => Object.fromEntries(mem)),
-    clear: () => { mem.clear(); return safe(() => tx("readwrite", s => s.clear()), () => {}); },
+    loadLocal, connect,
+    get: async k => mem.get(k),
+    set: async (k, v) => { mem.set(k, v); itx("readwrite", s => s.put(v, k)); push(k, v); },
+    all: async () => Object.fromEntries(mem),
+    clear: async () => { const ks = [...new Set([...mem.keys(), ...known])]; mem.clear(); await itx("readwrite", s => s.clear()); ks.forEach(k => push(k, undefined)); },
+    resyncAll: () => { for (const k of new Set([...mem.keys(), ...known])) push(k, mem.get(k)); },
+    cloud: () => !!col,
   };
 })();
 
@@ -227,6 +337,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const app = $("#app");
 function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => { t.classList.remove("on"); t.textContent = ""; }, 2200); }
+function status(s, txt){ const el = $("#sync"); el.dataset.s = s; el.lastElementChild.textContent = txt; }
 const debounce = (fn, ms = 400) => { let h; return (...a) => { clearTimeout(h); h = setTimeout(() => fn(...a), ms); }; };
 const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 const today = () => iso(new Date());
@@ -240,6 +351,11 @@ const sec = (title, side = "") => `<div class="sec"><h2>${title}</h2>${side}</di
 const footer = `<footer class="foot">
   <p><strong>This is a planner, not medical care.</strong> If you're in crisis in the US, call or text <a href="tel:988">988</a> (Suicide &amp; Crisis Lifeline). In an emergency, call <a href="tel:911">911</a>.</p>
   <p>© 2026 ${OWNER}</p></footer>`;
+function hello(){
+  const h = new Date().getHours();
+  $("#hello").textContent = h < 5 ? "Still up? Go gently." : h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+  $("#today-line").textContent = new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" });
+}
 
 // tap once to arm, tap again within 3 seconds to do it (no pop-up dialogs)
 function armed(btn, fn){
@@ -252,34 +368,48 @@ function armed(btn, fn){
 }
 
 // ---------- data ----------
-const DEF = { focus: 25, short: 5, long: 15, every: 4, start: 7, end: 23, sound: true };
+const DEF = { focus: 25, short: 5, long: 15, every: 4, start: 7, end: 23, sound: true, syncCalm: true };
 let S = { ...DEF };
 let cur = today();   // the day being viewed
 let D = null;        // that day's data
 const blankDay = () => ({ tasks: [], hours: {}, dump: "", first: "", mood: 5, energy: 5, safe: 5, ground: ["", "", "", "", ""], wins: "", helped: "", pomos: 0 });
-const getDay = async d => Object.assign(blankDay(), (await DB.get("day:" + d)) || {});
-const saveDay = (d, v) => DB.set("day:" + d, v);
+const getDay = async d => Object.assign(blankDay(), structuredClone((await DB.get("day:" + d)) || {}));
+const saveDay = (d, v) => { const x = structuredClone(v); delete x._d; return DB.set("day:" + d, x); };
 const saveD = debounce(() => { if (D) saveDay(D._d, D).then(() => toast("Saved")); });
 async function loadD(){ D = await getDay(cur); D._d = cur; }
 async function withDay(d, fn){
   if (D && D._d === d) { fn(D); await saveDay(d, D); }
   else { const x = await getDay(d); fn(x); await saveDay(d, x); }
 }
-const dayNav = () => `<div class="day"><button data-dd="-1" aria-label="Previous day">‹</button><span aria-live="polite">${dayLabel(cur)}</span><button data-dd="1" aria-label="Next day">›</button>${cur !== today() ? `<button data-dd="0" style="font-size:.8rem;padding:0 10px">Today</button>` : ""}</div>`;
+const dayNav = () => `<div class="day"><button data-dd="-1" aria-label="Previous day">‹</button><span aria-live="polite">${dayLabel(cur)}</span><button data-dd="1" aria-label="Next day">›</button>${cur !== today() ? `<button class="tod" data-dd="0">Today</button>` : ""}</div>`;
 
-// ---------- pomodoro timer (runs on every tab) ----------
+// another device changed something: refresh quietly, but never while you're typing or dragging
+let stale = false;
+const editing = () => { const a = document.activeElement; return dragging || !!(a && app.contains(a) && (a.tagName === "TEXTAREA" || (a.tagName === "INPUT" && !["checkbox", "range", "file"].includes(a.type)))); };
+async function onChange(keys){
+  if (keys.includes("settings")) S = { ...DEF, ...((await DB.get("settings")) || {}) };
+  if (keys.includes("timer")) { const t = await DB.get("timer"); if (t) { T = { ...T, ...t }; updateClock(); } }
+  const viewKeys = { today: ["day:" + cur, "day:" + addDays(cur, -1)], plan: ["day:" + cur], calm: ["day:" + cur, "safe"], goals: ["goals"], more: ["settings"] }[route.cur] || [];
+  if (keys.some(k => viewKeys.includes(k))) { if (editing()) stale = true; else refresh(); }
+}
+app.addEventListener("focusout", () => setTimeout(() => { if (stale && !editing()) refresh(); }, 50));
+async function refresh(){ stale = false; const y = scrollY; await render(false); scrollTo(0, y); }
+
+// ---------- pomodoro timer (runs on every tab, and follows you across devices) ----------
 const modeName = { focus: "Focus", short: "Short break", long: "Long break" };
 const tips = {
   focus: "One task. Phone face down. If a thought shows up, park it below and come back.",
   short: "Stand up. Drink some water. Look at something far away.",
   long: "Step away from the screen. Move, stretch, or rest your eyes.",
 };
-let T = { mode: "focus", running: false, endAt: 0, left: DEF.focus * 60, task: null, taskText: "", cycle: 0, day: today() };
+const DEVICE = uid(); // the device that started a timer counts it; others wait 5 s so a pomodoro isn't counted twice
+let T = { mode: "focus", running: false, endAt: 0, left: DEF.focus * 60, task: null, taskText: "", cycle: 0, day: today(), dev: "" };
 const CIRC = 2 * Math.PI * 52;
-const saveT = () => DB.set("timer", T);
+const saveT = () => DB.set("timer", { ...T });
 const remaining = () => T.running ? Math.max(0, Math.ceil((T.endAt - Date.now()) / 1000)) : T.left;
 function setMode(m){ T.mode = m; T.left = S[m] * 60; T.running = false; }
 let AC, wake;
+const unlockAudio = () => { try { AC ||= new (window.AudioContext || window.webkitAudioContext)(); AC.resume(); } catch {} };
 function chime(){
   if (!S.sound) return;
   try {
@@ -294,12 +424,14 @@ function chime(){
   } catch {}
 }
 async function start(){
-  try { AC ||= new (window.AudioContext || window.webkitAudioContext)(); AC.resume(); } catch {}
+  unlockAudio();
   try { wake = await navigator.wakeLock?.request("screen"); } catch {}
-  T.endAt = Date.now() + T.left * 1000; T.running = true; saveT(); updateClock();
+  T.endAt = Date.now() + T.left * 1000; T.running = true; T.dev = DEVICE; saveT(); updateClock();
 }
 function pause(){ T.left = remaining(); T.running = false; try { wake?.release(); } catch {} saveT(); updateClock(); }
+let finishing = false;
 async function finish(skipped){
+  if (finishing) return; finishing = true;
   const was = T.mode; T.running = false; try { wake?.release(); } catch {}
   if (T.day !== today()) { T.day = today(); T.cycle = 0; }
   if (was === "focus" && !skipped) {
@@ -313,7 +445,7 @@ async function finish(skipped){
     if (!skipped) { chime(); toast("Break's over. Pick up where you left off."); }
     setMode("focus");
   }
-  saveT();
+  saveT(); finishing = false;
   if (route.cur === "today" && cur === today()) renderTasks();
   updateClock();
 }
@@ -331,10 +463,13 @@ function updateClock(){
   $("#ptip").textContent = tips[T.mode];
   $("#pcount").textContent = `${D && D._d === today() ? D.pomos || 0 : 0} today`;
 }
-setInterval(() => { if (!T.running) return; if (Date.now() >= T.endAt) finish(false); else updateClock(); }, 500);
+setInterval(() => {
+  if (!T.running) return;
+  if (Date.now() >= T.endAt && (T.dev === DEVICE || Date.now() >= T.endAt + 5000)) finish(false); else updateClock();
+}, 500);
 
 const timerBox = () => `<section class="box" aria-labelledby="pt">
-  <div class="bh"><h3 id="pt">Pomodoro</h3><span class="eyebrow" id="pcount"></span></div>
+  <div class="bh"><h3 id="pt">Focus timer</h3><span class="eyebrow" id="pcount"></span></div>
   <div class="modes" role="group" aria-label="Timer mode">${Object.keys(modeName).map(m => `<button class="chip" data-m="${m}" aria-pressed="false">${modeName[m]}</button>`).join("")}</div>
   <div class="ring"><svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="ag" x1="0" y1="0" x2="1" y2="1">
     <stop offset="0" stop-color="#ff8fb8"/><stop offset=".35" stop-color="#ffb17a"/><stop offset=".65" stop-color="#a98bff"/><stop offset="1" stop-color="#5fc6e8"/></linearGradient></defs>
@@ -346,22 +481,25 @@ const timerBox = () => `<section class="box" aria-labelledby="pt">
 // ---------- router ----------
 const views = {};
 const titles = { today: "Today", plan: "Plan", goals: "Goals", calm: "Calm", more: "More" };
-let breathH = null;
-async function route(){
+let breathH = null, dragging = false;
+async function render(fresh){
   let v = location.hash.slice(1) || "today";
   if (!views[v]) v = "today";
   clearInterval(breathH); breathH = null;
   app.oninput = app.onclick = app.onchange = app.onsubmit = app.onkeydown = app.onpointerdown = app.onpointermove = app.onpointerup = app.onpointercancel = null;
-  document.querySelectorAll(".ghost").forEach(g => g.remove());
+  document.querySelectorAll(".ghost").forEach(g => g.remove()); dragging = false;
   route.cur = v;
   document.querySelectorAll("nav.tabs a").forEach(a => a.dataset.v === v ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
   await views[v]();
   updateClock();
-  if (route.ran) { window.scrollTo(0, 0); app.focus({ preventScroll: true }); }
-  route.ran = true;
+  if (fresh) {
+    app.classList.remove("enter"); void app.offsetWidth; app.classList.add("enter");
+    if (route.ran) { window.scrollTo(0, 0); app.focus({ preventScroll: true }); }
+    route.ran = true;
+  }
 }
+const route = () => { stale = false; return render(true); };
 addEventListener("hashchange", route);
-// day arrows live in the section bar on several tabs
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-dd]"); if (!b) return;
   cur = +b.dataset.dd === 0 ? today() : addDays(cur, +b.dataset.dd); route();
@@ -408,7 +546,7 @@ views.today = async () => {
   const task = el => D.tasks.find(t => t.id === el.closest(".task")?.dataset.id);
   app.onsubmit = e => {
     e.preventDefault(); const i = $("#addt"), v = i.value.trim(); if (!v) return;
-    D.tasks.push({ id: uid(), text: v, est: 1, done: 0, checked: false, top: false });
+    D.tasks.push({ id: uid(), text: v, est: 1, done: 0, checked: false, top: false, hour: null });
     i.value = ""; saveD(); renderTasks(); i.focus();
   };
   app.onchange = e => {
@@ -461,12 +599,13 @@ views.plan = async () => {
       <div class="drop trayd" data-drop=""><div class="chips">${D.tasks.filter(t => !placed(t)).map(chip).join("")}</div></div>
       <form id="addf" class="add" autocomplete="off"><label class="sr" for="addt">New task</label>
         <input class="line" id="addt" placeholder="Add a task, then press Enter" enterkeyhint="done"><button class="btn">Add</button></form></section>
-    <p class="lede">Leave some gaps. If the plan slips, it still helped you start.</p>
-    <datalist id="tl">${sugg.map(s => `<option value="${esc(s)}"></option>`).join("")}</datalist>
-    <ol class="hours">${hrs.map(h => `<li class="hr${h === now ? " now" : ""}${h < now ? " past" : ""}">
-      <label class="t" for="h${h}">${fmtH(h)}${h === now ? '<span class="sr"> (this hour)</span>' : ""}</label>
-      <div class="drop hd" data-drop="${h}"><div class="chips">${D.tasks.filter(t => t.hour === h).map(chip).join("")}</div>
-        <input id="h${h}" data-h="${h}" list="tl" value="${esc(D.hours[h])}" autocomplete="off" placeholder="${h === now ? "Now" : "Note"}"></div></li>`).join("")}</ol>
+    <section class="box" aria-label="Hours">
+      <p class="hint" style="margin-top:0">Leave some gaps. If the plan slips, it still helped you start.</p>
+      <datalist id="tl">${sugg.map(s => `<option value="${esc(s)}"></option>`).join("")}</datalist>
+      <ol class="hours">${hrs.map(h => `<li class="hr${h === now ? " now" : ""}${h < now ? " past" : ""}">
+        <label class="t" for="h${h}">${h === now ? "Now" : fmtH(h)}${h === now ? `<span class="sr"> (${fmtH(h)})</span>` : ""}</label>
+        <div class="drop hd" data-drop="${h}"><div class="chips">${D.tasks.filter(t => t.hour === h).map(chip).join("")}</div>
+          <input id="h${h}" data-h="${h}" list="tl" value="${esc(D.hours[h])}" autocomplete="off" placeholder="${h === now ? "What's happening now?" : "Add a note"}"></div></li>`).join("")}</ol></section>
     <section class="box" aria-labelledby="ft"><h3 id="ft">Tomorrow I'll start with</h3>
       <p class="hint" id="ft-d">One small first step. It shows up at the top of tomorrow's Today page.</p>
       <input class="line" id="first" aria-labelledby="ft" aria-describedby="ft-d" value="${esc(D.first)}" autocomplete="off" placeholder="Open the essay doc and write one sentence"></section>${footer}`;
@@ -501,12 +640,13 @@ views.plan = async () => {
     if (!drag) return;
     clearInterval(drag.scroll); drag.ghost.remove(); drag.el.classList.remove("lift"); drag.over?.classList.remove("over");
     if (ok && drag.over) place(drag.el, drag.over.dataset.drop);
-    drag = null;
+    drag = null; dragging = false;
+    if (stale && !editing()) refresh();
   };
   app.onpointermove = e => {
     if (!drag) return;
     drag.x = e.clientX; drag.y = e.clientY;
-    drag.ghost.style.transform = `translate(${e.clientX - drag.dx}px,${e.clientY - drag.dy}px)`;
+    drag.ghost.style.transform = `translate(${e.clientX - drag.dx}px,${e.clientY - drag.dy}px) rotate(-1.5deg)`;
     over();
   };
   app.onpointerdown = e => {
@@ -515,8 +655,8 @@ views.plan = async () => {
     const el = g.closest(".pchip"), r = el.getBoundingClientRect(), ghost = el.cloneNode(true);
     ghost.classList.add("ghost"); ghost.style.width = r.width + "px"; ghost.setAttribute("aria-hidden", "true");
     document.body.appendChild(ghost); el.classList.add("lift");
-    drag = { el, ghost, dx: e.clientX - r.left, dy: e.clientY - r.top, x: e.clientX, y: e.clientY, over: null };
-    drag.scroll = setInterval(() => { const v = drag.y < 90 ? -14 : drag.y > innerHeight - 130 ? 14 : 0; if (v) { scrollBy(0, v); over(); } }, 16);
+    drag = { el, ghost, dx: e.clientX - r.left, dy: e.clientY - r.top, x: e.clientX, y: e.clientY, over: null }; dragging = true;
+    drag.scroll = setInterval(() => { const v = drag.y < 90 ? -14 : drag.y > innerHeight - 150 ? 14 : 0; if (v) { scrollBy(0, v); over(); } }, 16);
     try { g.setPointerCapture(e.pointerId); } catch {}
     app.onpointermove(e);
   };
@@ -539,8 +679,8 @@ views.plan = async () => {
 // ---------- goals ----------
 const HZ = [["week", "This week"], ["month", "This month"], ["big", "Bigger picture"]];
 views.goals = async () => {
-  const G = (await DB.get("goals")) || [];
-  const save = debounce(() => DB.set("goals", G).then(() => toast("Saved")));
+  const G = structuredClone((await DB.get("goals")) || []);
+  const save = debounce(() => DB.set("goals", structuredClone(G)).then(() => toast("Saved")));
   const item = g => `<li class="goal${g.done ? " done" : ""}" data-id="${g.id}">
     <input type="checkbox" ${g.done ? "checked" : ""} aria-label="Reached: ${esc(g.text)}">
     <div class="gf"><input class="gt" value="${esc(g.text)}" placeholder="Goal" aria-label="Goal" autocomplete="off">
@@ -570,12 +710,12 @@ views.goals = async () => {
 views.calm = async () => {
   await loadD();
   const safe = Object.assign({ people: "", places: "", words: "" }, (await DB.get("safe")) || {});
-  const saveSafe = debounce(() => DB.set("safe", safe).then(() => toast("Saved")));
+  const saveSafe = debounce(() => DB.set("safe", { ...safe }).then(() => toast("Saved")));
   const sl = (k, n) => `<div class="slider"><label for="${k}">${n} <output id="${k}v" for="${k}">${D[k]} of 10</output></label>
     <input id="${k}" type="range" min="0" max="10" value="${D[k]}" aria-valuetext="${D[k]} of 10"></div>`;
   const senses = ["things I can see", "things I can touch", "things I can hear", "things I can smell", "thing I can taste"];
   app.innerHTML = `${sec("Check in", dayNav())}
-    ${sl("mood", "Mood")}${sl("energy", "Energy")}${sl("safe", "How safe I feel right now")}
+    <section class="box" aria-label="How I'm doing">${sl("mood", "Mood")}${sl("energy", "Energy")}${sl("safe", "How safe I feel right now")}</section>
     <section class="box" aria-labelledby="br"><h3 id="br">Box breathing</h3>
       <p class="hint">In for 4, hold for 4, out for 4, hold for 4. Follow the circle.</p>
       <div class="breathe"><div class="orb" id="orb"><b id="bcount" aria-hidden="true"></b></div>
@@ -621,21 +761,28 @@ views.calm = async () => {
 
 // ---------- more: settings + your data ----------
 views.more = async () => {
+  const cloud = DB.cloud();
   const num = (k, n, min, max) => `<div class="field"><label for="s-${k}">${n}</label><input id="s-${k}" data-k="${k}" type="number" inputmode="numeric" min="${min}" max="${max}" value="${S[k]}"></div>`;
-  app.innerHTML = `${sec("Timer")}
-    ${num("focus", "Focus minutes", 1, 120)}${num("short", "Short break minutes", 1, 60)}${num("long", "Long break minutes", 1, 90)}${num("every", "Long break after", 2, 12)}
-    <div class="row"><label class="row" style="gap:0"><input type="checkbox" id="s-sound" ${S.sound ? "checked" : ""}>Soft chime when a timer ends</label>
-      <button class="btn quiet" id="test">Play chime</button></div>
-    ${sec("Planner hours")}
-    ${num("start", "Day starts at (0-23)", 0, 23)}${num("end", "Day ends at (0-23)", 0, 23)}
+  app.innerHTML = `${sec("Settings")}
+    <section class="box" aria-labelledby="tm"><h3 id="tm">Timer</h3>
+      ${num("focus", "Focus minutes", 1, 120)}${num("short", "Short break minutes", 1, 60)}${num("long", "Long break minutes", 1, 90)}${num("every", "Long break after", 2, 12)}
+      <div class="row"><label class="row" style="gap:0"><input type="checkbox" id="s-sound" ${S.sound ? "checked" : ""}>Soft chime when a timer ends</label>
+        <button class="btn quiet" id="test">Play chime</button></div></section>
+    <section class="box" aria-labelledby="ph"><h3 id="ph">Planner hours</h3>
+      ${num("start", "Day starts at (0-23)", 0, 23)}${num("end", "Day ends at (0-23)", 0, 23)}</section>
     ${sec("Your data")}
-    <p>Everything lives in this browser on this device. A different device or browser won't have it, and clearing your browser's website data erases it. Save a backup now and then.</p>
-    <div class="row"><button class="btn" id="copy">Copy backup</button><button class="btn quiet" id="dl">Download backup</button>
-      <label class="btn quiet" for="imp" tabindex="0" id="impl">Restore from file</label><input type="file" id="imp" accept="application/json,.json" class="sr"></div>
-    <section class="box" aria-labelledby="pb"><h3 id="pb">Restore from pasted text</h3><p class="hint">Paste a backup you copied, then tap Restore. It replaces what's on this device now.</p>
-      <textarea class="lined" id="paste" aria-labelledby="pb" style="min-height:6rem"></textarea>
+    <section class="box" aria-labelledby="sy"><h3 id="sy">Sync</h3>
+      <p class="hint">${cloud ? "Your plans sync to your own Claude account, so they show up on your phone and computer when you open this page signed in. Nobody else who opens this link can see them. A copy also stays on this device so it works offline."
+        : "Right now everything lives in this browser on this device. When you open this planner on claude.ai while signed in, it syncs to your Claude account."}</p>
+      <div class="row"><label class="row" style="gap:0"><input type="checkbox" id="s-syncCalm" ${S.syncCalm !== false ? "checked" : ""}>Sync my Calm notes too</label></div>
+      <p class="hint" style="margin-bottom:0">Turn this off to keep check-ins, grounding, wins and your safe list only on this device.</p></section>
+    <section class="box" aria-labelledby="bk"><h3 id="bk">Backup</h3>
+      <div class="row"><button class="btn" id="copy">Copy backup</button><button class="btn quiet" id="dl">Download backup</button>
+        <label class="btn quiet" for="imp" tabindex="0" id="impl">Restore from file</label><input type="file" id="imp" accept="application/json,.json" class="sr"></div>
+      <p class="hint" style="margin-top:14px">Or paste a backup you copied, then tap Restore. It replaces what's here now.</p>
+      <textarea class="lined" id="paste" aria-label="Paste a backup" style="min-height:5rem"></textarea>
       <div class="row"><button class="btn quiet" id="rp">Restore</button><span class="spacer"></span><button class="btn danger" id="wipe">Erase everything</button></div></section>
-    <p class="lede">Private by design: no accounts, no cookies, no analytics. To open it like an app on iPhone or iPad: in Safari, tap Share, then Add to Home Screen.</p>${footer}`;
+    <p class="lede">No ads, no tracking. To open it like an app on iPhone: in Safari, tap Share, then Add to Home Screen.</p>${footer}`;
   app.onchange = async e => {
     const el = e.target;
     if (el.dataset.k) {
@@ -644,13 +791,14 @@ views.more = async () => {
       if (!T.running && ["focus", "short", "long"].includes(el.dataset.k)) setMode(T.mode);
     }
     if (el.id === "s-sound") S.sound = el.checked;
+    if (el.id === "s-syncCalm") { S.syncCalm = el.checked; await DB.set("settings", { ...S }); DB.resyncAll(); return toast(el.checked ? "Calm notes will sync" : "Calm notes now stay on this device"); }
     if (el.id === "imp") { const f = el.files[0]; if (f) restore(await f.text()); return; }
-    await DB.set("settings", S); saveT(); toast("Saved");
+    await DB.set("settings", { ...S }); saveT(); toast("Saved");
   };
   const dump = async () => JSON.stringify({ app: "aura-planner", v: 1, at: new Date().toISOString(), data: await DB.all() });
-  $("#test").onclick = () => { try { AC ||= new (window.AudioContext || window.webkitAudioContext)(); AC.resume(); } catch {} const s = S.sound; S.sound = true; chime(); S.sound = s; };
+  $("#test").onclick = () => { unlockAudio(); const s = S.sound; S.sound = true; chime(); S.sound = s; };
   $("#copy").onclick = async () => { const txt = await dump(); try { await navigator.clipboard.writeText(txt); toast("Backup copied. Paste it into a note to keep it."); } catch { $("#paste").value = txt; $("#paste").select(); toast("Couldn't copy. The backup is selected in the box below."); } };
-  $("#dl").onclick = async () => {
+  if ($("#dl")) $("#dl").onclick = async () => {
     const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([await dump()], { type: "application/json" }));
     a.download = `aura-planner-backup-${today()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
     toast("If nothing downloaded, use Copy backup instead.");
@@ -665,19 +813,24 @@ async function restore(txt){
     if (j.app !== "aura-planner" || typeof j.data !== "object") throw 0;
     await DB.clear();
     for (const [k, v] of Object.entries(j.data)) await DB.set(k, v);
-    await boot(); toast("Backup restored"); location.hash = "today"; route();
+    await loadState(); toast("Backup restored"); location.hash = "today"; route();
   } catch { toast("That isn't an aura planner backup. Use the text or file you saved from this page."); }
 }
 
 // ---------- start ----------
-async function boot(){
+async function loadState(){
   S = { ...DEF, ...((await DB.get("settings")) || {}) };
   const saved = await DB.get("timer");
   if (saved) T = { ...T, ...saved }; else setMode("focus");
   if (T.day !== today()) { T.day = today(); T.cycle = 0; T.task = null; T.taskText = ""; }
-  if (T.running && Date.now() >= T.endAt) await finish(false); // finished while the page was closed
 }
-boot().then(route);
+(async () => {
+  hello(); setInterval(hello, 60000);
+  await DB.loadLocal();
+  await loadState();
+  await route();
+  DB.connect();
+})();
 </script>
 </body>
 </html>
