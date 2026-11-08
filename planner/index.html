@@ -1,0 +1,597 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Nothing on this page talks to a server: plans live only in this browser. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="description" content="aura planner: a free, private daily planner with a pomodoro timer, tasks, an hourly plan, goals, and calming tools. Everything stays on your device.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="aura">
+<link rel="icon" type="image/png" sizes="32x32" href="/kjournal-icon-32.png">
+<link rel="apple-touch-icon" href="/kjournal-icon-180.png">
+<link rel="canonical" href="https://kjournal.org/planner/">
+<title>aura planner</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* layout: kjournal's single column. Aura mast, aura section bars, cards, fixed bottom tabs. */
+:root{
+  --ink:#2c2740; --mute:#5f5873; --line:#e3dcec; --line-strong:#b7adc8; --paper:#fbf8fd; --card:#fffdff;
+  --r:#7a3ea8; --focus:#2b5fa8; --danger:#b3243a; --tint:#f2eafb; --on-aura:#2c2740; --pill:rgba(255,255,255,.5);
+  --aura:radial-gradient(at 10% 15%,#ffbfd6 0,transparent 55%),radial-gradient(at 88% 8%,#cdb9ff 0,transparent 52%),radial-gradient(at 75% 95%,#a9e2ff 0,transparent 55%),radial-gradient(at 25% 100%,#c2f2d6 0,transparent 50%),#ffe2c9;
+  --aura-line:linear-gradient(90deg,#ffc2d8,#ffd9b8 26%,#dac6ff 55%,#b6dcff 80%,#c0efdc);
+  --sans:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --ink:#ece8f6; --mute:#aaa2bd; --line:#332d45; --line-strong:#5b5172; --paper:#15121e; --card:#1e1a2a;
+  --r:#c9a3ff; --focus:#8ab4ff; --danger:#ff8a9b; --tint:#2a2140; --on-aura:#fff; --pill:rgba(0,0,0,.28);
+  --aura:radial-gradient(at 10% 15%,#7a2d5c 0,transparent 55%),radial-gradient(at 88% 8%,#4a35a0 0,transparent 52%),radial-gradient(at 75% 95%,#175a85 0,transparent 55%),radial-gradient(at 25% 100%,#16634f 0,transparent 50%),#3a1f45;
+  --aura-line:linear-gradient(90deg,#74295a,#6d3a3a 26%,#4f3a98 55%,#1d5a80 80%,#1b6552);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --ink:#ece8f6; --mute:#aaa2bd; --line:#332d45; --line-strong:#5b5172; --paper:#15121e; --card:#1e1a2a;
+  --r:#c9a3ff; --focus:#8ab4ff; --danger:#ff8a9b; --tint:#2a2140; --on-aura:#fff; --pill:rgba(0,0,0,.28);
+  --aura:radial-gradient(at 10% 15%,#7a2d5c 0,transparent 55%),radial-gradient(at 88% 8%,#4a35a0 0,transparent 52%),radial-gradient(at 75% 95%,#175a85 0,transparent 55%),radial-gradient(at 25% 100%,#16634f 0,transparent 50%),#3a1f45;
+  --aura-line:linear-gradient(90deg,#74295a,#6d3a3a 26%,#4f3a98 55%,#1d5a80 80%,#1b6552);
+  color-scheme:dark}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:1rem/1.45 var(--sans)}
+button,input,textarea{font:inherit;color:inherit}
+a{color:var(--r);text-underline-offset:3px}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:var(--s4);top:-60px;background:var(--ink);color:var(--paper);padding:var(--s2) var(--s4);z-index:20;border-radius:10px}
+.skip:focus{top:var(--s4)}
+.wrap{max-width:820px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main.wrap{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+
+.mast{background:var(--aura);color:var(--on-aura);padding-block:28px 26px}
+.mast h1{margin:0;font-size:clamp(30px,7vw,46px);line-height:1;letter-spacing:-.02em;text-transform:lowercase}
+.mast p{margin:8px 0 0}
+.mast .note{display:inline-block;margin-top:14px;font-size:.85rem;background:var(--pill);padding:5px 12px;border-radius:99px}
+.logo{display:block;width:40px;height:40px;margin-bottom:18px;border-radius:11px;background:var(--aura);box-shadow:0 0 0 2px rgba(255,255,255,.85),0 4px 14px rgba(0,0,0,.14)}
+
+.sec{background:var(--aura-line);color:var(--on-aura);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--s3);padding:10px 14px;margin:26px 0 14px;border-radius:4px}
+.sec h2{margin:0;font-size:.95rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.sec .eyebrow{color:inherit}
+.eyebrow{font-weight:700;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.lede{color:var(--mute);margin:0 0 var(--s4)}
+.day{display:flex;align-items:center;gap:4px}
+.day button{min-width:40px;min-height:36px;border:0;border-radius:8px;background:var(--pill);color:inherit;font-size:1.1rem;cursor:pointer}
+.day span{font-weight:700;font-size:.85rem;padding:0 6px;white-space:nowrap}
+
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:14px 0}
+.box h3{margin:0;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase}
+.box .hint{color:var(--mute);font-size:.9rem;margin:2px 0 8px}
+.bh{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+
+.field{display:grid;grid-template-columns:minmax(8rem,auto) 1fr;align-items:end;gap:12px;margin:12px 0}
+.field label{font-size:.75rem;font-weight:700;letter-spacing:.06em;color:var(--mute);text-transform:uppercase;padding-bottom:6px}
+.field input,input.line{border:0;border-bottom:1px solid var(--line-strong);background:none;padding:6px 2px;min-height:44px;font-size:1.05rem;border-radius:0;width:100%;min-width:0}
+.slider{margin:var(--s4) 0}
+.slider label{display:flex;justify-content:space-between;font-size:.75rem;font-weight:700;letter-spacing:.06em;color:var(--mute);text-transform:uppercase}
+.slider output{font-size:1rem;letter-spacing:0;text-transform:none;color:var(--ink)}
+input[type=range]{width:100%;min-height:44px;accent-color:var(--r)}
+input[type=checkbox]{width:24px;height:24px;accent-color:var(--r);margin:10px;flex:none;cursor:pointer}
+textarea.lined{display:block;width:100%;border:0;resize:vertical;min-height:170px;background:transparent repeating-linear-gradient(transparent 0 31px,var(--line) 31px 32px);line-height:32px;padding:0 2px;font-size:1.05rem}
+textarea.lined:focus-visible{outline-offset:6px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border:1px solid transparent;border-radius:99px;padding:0 18px;background:var(--ink);color:var(--paper);font-weight:600;cursor:pointer;text-decoration:none}
+.btn.aura{background:var(--aura-line);color:var(--on-aura)}
+.btn.quiet{background:var(--card);color:var(--ink);border-color:var(--line-strong)}
+.btn.danger{background:var(--card);color:var(--danger);border-color:var(--danger)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row.c{justify-content:center}
+.spacer{flex:1}
+.empty{color:var(--mute);text-align:center;padding:20px 0;margin:0}
+footer.foot{color:var(--mute);font-size:.85rem;margin-top:40px;border-top:1px solid var(--line);padding-top:14px}
+footer.foot p{margin:0 0 8px}
+footer.foot strong{color:var(--ink)}
+
+/* pomodoro */
+.modes{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:12px 0 4px}
+.chip{border:1px solid var(--line-strong);background:var(--card);border-radius:99px;padding:0 14px;min-height:40px;font-size:.9rem;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--tint);border-color:var(--r);color:var(--r);font-weight:700}
+.ring{position:relative;width:min(250px,68vw);aspect-ratio:1;max-width:100%;margin:8px auto}
+.ring::before{content:"";position:absolute;inset:14%;border-radius:50%;background:var(--aura);filter:blur(26px);opacity:.6}
+.ring.on::before{animation:glow 6s ease-in-out infinite}
+@keyframes glow{50%{opacity:.95;transform:scale(1.08)}}
+.ring svg{position:absolute;inset:0;width:100%;height:100%}
+.ring circle{fill:none;stroke-width:7}
+.trk{stroke:var(--line)}
+.prog{stroke:url(#ag);stroke-linecap:round;transform:rotate(-90deg);transform-origin:center;transition:stroke-dashoffset .5s linear}
+.clock{position:absolute;inset:0;display:grid;place-content:center;text-align:center;padding:18%}
+#clock{font-size:clamp(42px,12vw,60px);font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em;line-height:1}
+#ctask{color:var(--mute);font-size:.85rem;margin-top:6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ptip{color:var(--mute);font-size:.9rem;text-align:center;margin:12px 0 0}
+.nudge{background:var(--card);border:1px solid var(--r);border-radius:16px;padding:12px 16px;margin:14px 0;display:grid;gap:2px}
+.nudge .eyebrow{color:var(--r)}
+
+/* tasks */
+.add{display:flex;gap:8px;margin:8px 0}
+.add input{flex:1;min-width:0}
+.tasks,.hours,.goals{list-style:none;margin:8px 0 0;padding:0}
+.task{display:flex;flex-wrap:wrap;align-items:center;gap:2px;border-bottom:1px solid var(--line);padding:2px 0}
+.task.top{background:linear-gradient(90deg,var(--tint),transparent 75%);border-radius:10px}
+.task .tt{flex:1 1 9rem;min-width:0;border:0;background:none;font-size:1.02rem;padding:8px 2px;min-height:44px}
+.task.done .tt{text-decoration:line-through;color:var(--mute)}
+.acts{display:flex;margin-left:auto}
+.ic{min-width:44px;min-height:44px;border:0;background:none;border-radius:10px;cursor:pointer;color:var(--mute);font-size:1.05rem;display:inline-grid;place-items:center;padding:0 6px}
+.ic:hover{background:var(--tint)}
+.ic.star[aria-pressed=true]{color:var(--r)}
+.ic.go{color:var(--r);font-size:.8rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.ic.go[aria-pressed=true]{background:var(--tint)}
+.dots{font-size:.75rem;letter-spacing:2px;color:var(--r);font-variant-numeric:tabular-nums}
+
+/* hours */
+.hr{display:grid;grid-template-columns:4.75rem 1fr;align-items:center;border-bottom:1px solid var(--line);padding:0 6px}
+.hr .t{font-size:.75rem;font-weight:700;letter-spacing:.06em;color:var(--mute);text-transform:uppercase;font-variant-numeric:tabular-nums}
+.hr input{border:0;background:none;min-height:48px;font-size:1.02rem;padding:6px 4px;width:100%;min-width:0}
+.hr.past input{color:var(--mute)}
+.hr.now{background:var(--tint);border-radius:10px;border-bottom-color:transparent}
+.hr.now .t{color:var(--r)}
+
+/* goals */
+.goal{display:flex;align-items:flex-start;gap:4px;border-bottom:1px solid var(--line);padding:4px 0}
+.goal .gf{flex:1;min-width:0;display:grid}
+.goal input.gt{font-weight:700;border:0;background:none;min-height:40px;font-size:1.02rem;padding:6px 2px}
+.goal input.gs{border:0;background:none;min-height:36px;font-size:.92rem;color:var(--mute);padding:2px 2px 8px}
+.goal.done input.gt{text-decoration:line-through;color:var(--mute)}
+
+/* calm */
+.breathe{display:grid;place-items:center;gap:12px;padding:8px 0}
+.orb{width:150px;height:150px;max-width:100%;border-radius:50%;background:var(--aura);transform:scale(.62);transition:transform 4s ease-in-out;display:grid;place-items:center;box-shadow:0 0 40px rgba(160,120,220,.35)}
+.orb.in{transform:scale(1)}
+.orb b{font-size:1.6rem;font-variant-numeric:tabular-nums;color:var(--on-aura)}
+#bphase{font-weight:700;min-height:1.5em}
+.g5{display:grid;gap:4px}
+.g5 .field{grid-template-columns:minmax(9.5rem,auto) 1fr;margin:4px 0}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);z-index:5;padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px))}
+nav.tabs ul{display:flex;justify-content:center;gap:2px;max-width:820px;margin:0 auto;padding:0;list-style:none}
+nav.tabs li{flex:1;max-width:150px}
+nav.tabs a{display:flex;align-items:center;justify-content:center;min-height:44px;border-radius:10px;font-size:.85rem;color:var(--mute);text-decoration:none}
+nav.tabs a[aria-current=page]{color:var(--r);font-weight:700;background:var(--tint)}
+.toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 14px;border-radius:99px;font-size:.85rem;opacity:0;transition:opacity .2s;pointer-events:none;max-width:calc(100% - 32px);text-align:center;z-index:9}
+.toast.on{opacity:1}
+@media (max-width:480px){.field,.g5 .field{grid-template-columns:1fr;gap:0}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}.orb{transform:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#app">Skip to content</a>
+<header class="mast"><div class="wrap">
+  <span class="logo" aria-hidden="true"></span>
+  <h1>aura planner</h1>
+  <p>one thing at a time. come back gently.</p>
+  <p class="note">Your plans are saved only on this device. Nothing is uploaded.</p>
+</div></header>
+
+<main class="wrap" id="app" tabindex="-1"></main>
+
+<nav class="tabs" aria-label="Planner sections"><ul>
+  <li><a href="#today" data-v="today">Today</a></li>
+  <li><a href="#plan" data-v="plan">Plan</a></li>
+  <li><a href="#goals" data-v="goals">Goals</a></li>
+  <li><a href="#calm" data-v="calm">Calm</a></li>
+  <li><a href="#more" data-v="more">More</a></li>
+</ul></nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+const OWNER = "GTLLco";
+
+// ---------- storage: IndexedDB in this browser only, memory if the browser blocks it ----------
+const DB = (() => {
+  let dbp, broken = false; const mem = new Map();
+  const open = () => dbp ||= new Promise((res, rej) => {
+    const r = indexedDB.open("aura-planner", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("kv");
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+  const tx = async (mode, fn) => { const db = await open(); return new Promise((res, rej) => {
+    const t = db.transaction("kv", mode); const out = fn(t.objectStore("kv"));
+    t.oncomplete = () => res(out && out.result); t.onerror = () => rej(t.error); }); };
+  const fail = () => { if (!broken) { broken = true; setTimeout(() => toast("This browser is blocking storage. Changes won't be kept."), 300); } };
+  const safe = async (fn, fb) => { if (!broken) { try { return await fn(); } catch { fail(); } } return fb(); };
+  return {
+    get: k => safe(() => tx("readonly", s => s.get(k)), () => mem.get(k)),
+    set: (k, v) => { mem.set(k, v); return safe(() => tx("readwrite", s => s.put(v, k)), () => {}); },
+    all: () => safe(async () => { const db = await open(); return new Promise((res, rej) => {
+      const out = {}; const c = db.transaction("kv").objectStore("kv").openCursor();
+      c.onsuccess = () => { const cur = c.result; if (cur) { out[cur.key] = cur.value; cur.continue(); } else res(out); };
+      c.onerror = () => rej(c.error); }); }, () => Object.fromEntries(mem)),
+    clear: () => { mem.clear(); return safe(() => tx("readwrite", s => s.clear()), () => {}); },
+  };
+})();
+
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const app = $("#app");
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => { t.classList.remove("on"); t.textContent = ""; }, 2200); }
+const debounce = (fn, ms = 400) => { let h; return (...a) => { clearTimeout(h); h = setTimeout(() => fn(...a), ms); }; };
+const iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const today = () => iso(new Date());
+const addDays = (d, n) => { const x = new Date(d + "T12:00"); x.setDate(x.getDate() + n); return iso(x); };
+const dayLabel = d => d === today() ? "Today" : d === addDays(today(), 1) ? "Tomorrow" : d === addDays(today(), -1) ? "Yesterday"
+  : new Date(d + "T12:00").toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+const fmtH = h => `${h % 12 || 12} ${h < 12 ? "AM" : "PM"}`;
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const sec = (title, side = "") => `<div class="sec"><h2>${title}</h2>${side}</div>`;
+const footer = `<footer class="foot">
+  <p><strong>This is a planner, not medical care.</strong> If you're in crisis in the US, call or text <a href="tel:988">988</a> (Suicide &amp; Crisis Lifeline). In an emergency, call <a href="tel:911">911</a>.</p>
+  <p>© 2026 ${OWNER}</p></footer>`;
+
+// tap once to arm, tap again within 3 seconds to do it (no pop-up dialogs)
+function armed(btn, fn){
+  const label = btn.textContent;
+  btn.onclick = () => {
+    if (btn.dataset.arm) { delete btn.dataset.arm; btn.textContent = label; fn(); return; }
+    btn.dataset.arm = 1; btn.textContent = "Tap again to confirm";
+    setTimeout(() => { if (btn.isConnected && btn.dataset.arm) { delete btn.dataset.arm; btn.textContent = label; } }, 3000);
+  };
+}
+
+// ---------- data ----------
+const DEF = { focus: 25, short: 5, long: 15, every: 4, start: 7, end: 23, sound: true };
+let S = { ...DEF };
+let cur = today();   // the day being viewed
+let D = null;        // that day's data
+const blankDay = () => ({ tasks: [], hours: {}, dump: "", first: "", mood: 5, energy: 5, safe: 5, ground: ["", "", "", "", ""], wins: "", helped: "", pomos: 0 });
+const getDay = async d => Object.assign(blankDay(), (await DB.get("day:" + d)) || {});
+const saveDay = (d, v) => DB.set("day:" + d, v);
+const saveD = debounce(() => { if (D) saveDay(D._d, D).then(() => toast("Saved")); });
+async function loadD(){ D = await getDay(cur); D._d = cur; }
+async function withDay(d, fn){
+  if (D && D._d === d) { fn(D); await saveDay(d, D); }
+  else { const x = await getDay(d); fn(x); await saveDay(d, x); }
+}
+const dayNav = () => `<div class="day"><button data-dd="-1" aria-label="Previous day">‹</button><span aria-live="polite">${dayLabel(cur)}</span><button data-dd="1" aria-label="Next day">›</button>${cur !== today() ? `<button data-dd="0" style="font-size:.8rem;padding:0 10px">Today</button>` : ""}</div>`;
+
+// ---------- pomodoro timer (runs on every tab) ----------
+const modeName = { focus: "Focus", short: "Short break", long: "Long break" };
+const tips = {
+  focus: "One task. Phone face down. If a thought shows up, park it below and come back.",
+  short: "Stand up. Drink some water. Look at something far away.",
+  long: "Step away from the screen. Move, stretch, or rest your eyes.",
+};
+let T = { mode: "focus", running: false, endAt: 0, left: DEF.focus * 60, task: null, taskText: "", cycle: 0, day: today() };
+const CIRC = 2 * Math.PI * 52;
+const saveT = () => DB.set("timer", T);
+const remaining = () => T.running ? Math.max(0, Math.ceil((T.endAt - Date.now()) / 1000)) : T.left;
+function setMode(m){ T.mode = m; T.left = S[m] * 60; T.running = false; }
+let AC, wake;
+function chime(){
+  if (!S.sound) return;
+  try {
+    AC ||= new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime;
+    [523.25, 659.25, 783.99].forEach((f, i) => {
+      const o = AC.createOscillator(), g = AC.createGain(), s = t + i * .2;
+      o.type = "sine"; o.frequency.value = f;
+      g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(.16, s + .03); g.gain.exponentialRampToValueAtTime(.001, s + 1.4);
+      o.connect(g).connect(AC.destination); o.start(s); o.stop(s + 1.5);
+    });
+  } catch {}
+}
+async function start(){
+  try { AC ||= new (window.AudioContext || window.webkitAudioContext)(); AC.resume(); } catch {}
+  try { wake = await navigator.wakeLock?.request("screen"); } catch {}
+  T.endAt = Date.now() + T.left * 1000; T.running = true; saveT(); updateClock();
+}
+function pause(){ T.left = remaining(); T.running = false; try { wake?.release(); } catch {} saveT(); updateClock(); }
+async function finish(skipped){
+  const was = T.mode; T.running = false; try { wake?.release(); } catch {}
+  if (T.day !== today()) { T.day = today(); T.cycle = 0; }
+  if (was === "focus" && !skipped) {
+    await withDay(today(), d => { d.pomos = (d.pomos || 0) + 1; const t = d.tasks.find(x => x.id === T.task); if (t) t.done = (t.done || 0) + 1; });
+    T.cycle++;
+    const long = T.cycle % S.every === 0;
+    chime(); try { navigator.vibrate?.([120, 80, 120]); } catch {}
+    toast(long ? `${T.cycle} pomodoros. Take a long break.` : "Pomodoro done. Take a short break.");
+    setMode(long ? "long" : "short");
+  } else {
+    if (!skipped) { chime(); toast("Break's over. Pick up where you left off."); }
+    setMode("focus");
+  }
+  saveT();
+  if (route.cur === "today" && cur === today()) renderTasks();
+  updateClock();
+}
+function updateClock(){
+  const left = remaining(), mm = `${String(Math.floor(left / 60)).padStart(2, "0")}:${String(left % 60).padStart(2, "0")}`;
+  document.title = T.running ? `${mm} ${modeName[T.mode]} · aura planner` : `${titles[route.cur] || "Today"} · aura planner`;
+  const c = $("#clock"); if (!c) return;
+  const total = S[T.mode] * 60;
+  c.textContent = mm;
+  $("#prog").style.strokeDashoffset = CIRC * (1 - (total ? left / total : 0));
+  $("#go").textContent = T.running ? "Pause" : left < total ? "Resume" : "Start";
+  $(".ring").classList.toggle("on", T.running);
+  document.querySelectorAll("[data-m]").forEach(b => b.setAttribute("aria-pressed", b.dataset.m === T.mode));
+  $("#ctask").textContent = T.mode === "focus" ? (T.taskText || "Tap Focus on a task, or just start") : modeName[T.mode];
+  $("#ptip").textContent = tips[T.mode];
+  $("#pcount").textContent = `${D && D._d === today() ? D.pomos || 0 : 0} today`;
+}
+setInterval(() => { if (!T.running) return; if (Date.now() >= T.endAt) finish(false); else updateClock(); }, 500);
+
+const timerBox = () => `<section class="box" aria-labelledby="pt">
+  <div class="bh"><h3 id="pt">Pomodoro</h3><span class="eyebrow" id="pcount"></span></div>
+  <div class="modes" role="group" aria-label="Timer mode">${Object.keys(modeName).map(m => `<button class="chip" data-m="${m}" aria-pressed="false">${modeName[m]}</button>`).join("")}</div>
+  <div class="ring"><svg viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="ag" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#ff8fb8"/><stop offset=".35" stop-color="#ffb17a"/><stop offset=".65" stop-color="#a98bff"/><stop offset="1" stop-color="#5fc6e8"/></linearGradient></defs>
+    <circle class="trk" cx="60" cy="60" r="52"/><circle class="prog" id="prog" cx="60" cy="60" r="52" stroke-dasharray="${CIRC}" stroke-dashoffset="0"/></svg>
+    <div class="clock"><span id="clock" role="timer">25:00</span><span id="ctask"></span></div></div>
+  <div class="row c"><button class="btn aura" id="go">Start</button><button class="btn quiet" id="reset">Reset</button><button class="btn quiet" id="skip">Skip</button></div>
+  <p class="ptip" id="ptip"></p></section>`;
+
+// ---------- router ----------
+const views = {};
+const titles = { today: "Today", plan: "Plan", goals: "Goals", calm: "Calm", more: "More" };
+let breathH = null;
+async function route(){
+  let v = location.hash.slice(1) || "today";
+  if (!views[v]) v = "today";
+  clearInterval(breathH); breathH = null;
+  app.oninput = app.onclick = app.onchange = app.onsubmit = null;
+  route.cur = v;
+  document.querySelectorAll("nav.tabs a").forEach(a => a.dataset.v === v ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
+  await views[v]();
+  updateClock();
+  if (route.ran) { window.scrollTo(0, 0); app.focus({ preventScroll: true }); }
+  route.ran = true;
+}
+addEventListener("hashchange", route);
+// day arrows live in the section bar on several tabs
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-dd]"); if (!b) return;
+  cur = +b.dataset.dd === 0 ? today() : addDays(cur, +b.dataset.dd); route();
+});
+
+// ---------- today: timer + tasks ----------
+const order = t => (t.checked ? 2 : 0) + (t.top ? 0 : 1);
+function renderTasks(){
+  const ul = $("#tasks"); if (!ul) return;
+  const list = [...D.tasks].sort((a, b) => order(a) - order(b));
+  ul.innerHTML = list.length ? list.map(t => {
+    const est = t.est || 1, done = t.done || 0;
+    const dots = "●".repeat(Math.min(done, 8)) + "○".repeat(Math.max(0, est - done));
+    return `<li class="task${t.checked ? " done" : ""}${t.top && !t.checked ? " top" : ""}" data-id="${t.id}">
+      <input type="checkbox" ${t.checked ? "checked" : ""} aria-label="Done: ${esc(t.text)}">
+      <input class="tt" value="${esc(t.text)}" aria-label="Task" autocomplete="off">
+      <span class="acts">
+        <button class="ic" data-a="est" aria-label="${done} of ${est} pomodoros. Tap to change the plan."><span class="dots" aria-hidden="true">${dots}</span></button>
+        <button class="ic star" data-a="top" aria-pressed="${!!t.top}" aria-label="Top 3">★</button>
+        ${t.checked ? "" : `<button class="ic go" data-a="focus" aria-pressed="${T.task === t.id}">Focus</button>`}
+        <button class="ic" data-a="del" aria-label="Delete task">×</button></span></li>`;
+  }).join("") : `<li class="empty">Nothing here yet. Add one small thing you can start in under 5 minutes.</li>`;
+  const n = D.tasks.filter(t => t.checked).length;
+  $("#tsum").textContent = D.tasks.length ? `${n} of ${D.tasks.length} done` : "";
+}
+views.today = async () => {
+  await loadD();
+  const isToday = cur === today();
+  const y = isToday ? await getDay(addDays(cur, -1)) : null;
+  const carry = y && !y.carried ? y.tasks.filter(t => !t.checked) : [];
+  app.innerHTML = `${sec("Your day", dayNav())}
+    ${y && y.first ? `<p class="nudge"><span class="eyebrow">Start here</span>${esc(y.first)}</p>` : ""}
+    ${isToday ? timerBox() : `<p class="lede">You're planning ${esc(dayLabel(cur).toLowerCase())}. The timer lives on today's page.</p>`}
+    <section class="box" aria-labelledby="tk"><div class="bh"><h3 id="tk">Tasks</h3><span class="eyebrow" id="tsum"></span></div>
+      <p class="hint">Star up to 3 that matter most. Tap the dots to plan how many pomodoros a task needs.</p>
+      <form id="addf" class="add" autocomplete="off"><label class="sr" for="addt">New task</label>
+        <input class="line" id="addt" placeholder="Add a task, then press Enter" enterkeyhint="done"><button class="btn">Add</button></form>
+      <ul class="tasks" id="tasks"></ul>
+      ${carry.length ? `<p style="margin:12px 0 0"><button class="btn quiet" id="carry">Bring over ${carry.length} unfinished from yesterday</button></p>` : ""}</section>
+    <section class="box" aria-labelledby="pk"><h3 id="pk">Parking lot</h3>
+      <p class="hint" id="pk-d">A thought pops up mid-focus? Park it here and go back to your task.</p>
+      <textarea class="lined" id="dump" aria-labelledby="pk" aria-describedby="pk-d" style="min-height:8rem">${esc(D.dump)}</textarea></section>${footer}`;
+  renderTasks();
+  const task = el => D.tasks.find(t => t.id === el.closest(".task")?.dataset.id);
+  app.onsubmit = e => {
+    e.preventDefault(); const i = $("#addt"), v = i.value.trim(); if (!v) return;
+    D.tasks.push({ id: uid(), text: v, est: 1, done: 0, checked: false, top: false });
+    i.value = ""; saveD(); renderTasks(); i.focus();
+  };
+  app.onchange = e => {
+    if (e.target.type !== "checkbox") return; const t = task(e.target); if (!t) return;
+    t.checked = e.target.checked;
+    if (t.checked) { if (T.task === t.id && !T.running) { T.task = null; T.taskText = ""; saveT(); } toast(["Done. That counts.", "Nice. One less thing.", "Checked off."][Math.floor(Math.random() * 3)]); }
+    saveD(); renderTasks(); updateClock();
+  };
+  app.oninput = e => {
+    if (e.target.id === "dump") { D.dump = e.target.value; return saveD(); }
+    if (e.target.classList.contains("tt")) { const t = task(e.target); t.text = e.target.value; if (T.task === t.id) { T.taskText = t.text; saveT(); updateClock(); } saveD(); }
+  };
+  app.onclick = e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.m) { if (T.running) return toast("Pause first to switch modes."); setMode(b.dataset.m); saveT(); return updateClock(); }
+    if (b.id === "go") return T.running ? pause() : start();
+    if (b.id === "reset") { setMode(T.mode); saveT(); return updateClock(); }
+    if (b.id === "skip") return finish(true);
+    if (b.id === "carry") {
+      D.tasks.push(...carry.map(t => ({ ...t, id: uid(), done: 0 })));
+      y.carried = true; saveDay(addDays(cur, -1), y); saveD(); b.remove(); renderTasks(); return toast(`Brought over ${carry.length}`);
+    }
+    const t = task(b); if (!t) return;
+    const a = b.dataset.a;
+    if (a === "est") t.est = (t.est || 1) % 4 + 1;
+    if (a === "top") { if (!t.top && D.tasks.filter(x => x.top && !x.checked).length >= 3) return toast("Top 3 is full. Unstar one first."); t.top = !t.top; }
+    if (a === "focus") {
+      T.task = T.task === t.id ? null : t.id; T.taskText = T.task ? t.text : "";
+      if (T.task && !T.running && T.mode !== "focus") setMode("focus");
+      saveT(); updateClock(); $(".ring")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+    }
+    if (a === "del") { D.tasks = D.tasks.filter(x => x !== t); if (T.task === t.id) { T.task = null; T.taskText = ""; saveT(); updateClock(); } toast("Task deleted"); }
+    saveD(); renderTasks();
+  };
+};
+
+// ---------- plan: hour by hour ----------
+views.plan = async () => {
+  await loadD();
+  const now = cur === today() ? new Date().getHours() : cur < today() ? 99 : -1;
+  const hrs = []; for (let h = S.start; h <= S.end; h++) hrs.push(h);
+  const sugg = [...D.tasks.filter(t => !t.checked).map(t => t.text), "Break", "Eat", "Move", "Rest", "Wind down"];
+  app.innerHTML = `${sec("Hour by hour", dayNav())}
+    <p class="lede">Block out the day one hour at a time and leave some gaps. If the plan slips, it still helped you start.</p>
+    <datalist id="tl">${sugg.map(s => `<option value="${esc(s)}"></option>`).join("")}</datalist>
+    <ol class="hours">${hrs.map(h => `<li class="hr${h === now ? " now" : ""}${h < now ? " past" : ""}">
+      <label class="t" for="h${h}">${fmtH(h)}${h === now ? '<span class="sr"> (this hour)</span>' : ""}</label>
+      <input id="h${h}" data-h="${h}" list="tl" value="${esc(D.hours[h])}" autocomplete="off" placeholder="${h === now ? "Now" : ""}"></li>`).join("")}</ol>
+    <section class="box" aria-labelledby="ft"><h3 id="ft">Tomorrow I'll start with</h3>
+      <p class="hint" id="ft-d">One small first step. It shows up at the top of tomorrow's Today page.</p>
+      <input class="line" id="first" aria-labelledby="ft" aria-describedby="ft-d" value="${esc(D.first)}" autocomplete="off" placeholder="Open the essay doc and write one sentence"></section>${footer}`;
+  app.oninput = e => {
+    if (e.target.dataset.h) { D.hours[e.target.dataset.h] = e.target.value; saveD(); }
+    if (e.target.id === "first") { D.first = e.target.value; saveD(); }
+  };
+};
+
+// ---------- goals ----------
+const HZ = [["week", "This week"], ["month", "This month"], ["big", "Bigger picture"]];
+views.goals = async () => {
+  const G = (await DB.get("goals")) || [];
+  const save = debounce(() => DB.set("goals", G).then(() => toast("Saved")));
+  const item = g => `<li class="goal${g.done ? " done" : ""}" data-id="${g.id}">
+    <input type="checkbox" ${g.done ? "checked" : ""} aria-label="Reached: ${esc(g.text)}">
+    <div class="gf"><input class="gt" value="${esc(g.text)}" placeholder="Goal" aria-label="Goal" autocomplete="off">
+      <input class="gs" value="${esc(g.step)}" placeholder="Next tiny step (2 minutes or less)" aria-label="Next tiny step" autocomplete="off"></div>
+    <button class="ic" data-a="del" aria-label="Delete goal">×</button></li>`;
+  const draw = () => {
+    const done = G.filter(g => g.done).length;
+    app.innerHTML = `${sec("Goals", `<span class="eyebrow">${done} reached</span>`)}
+      <p class="lede">Keep each box to about three. Give every goal a next step small enough to do right now.</p>
+      ${HZ.map(([k, n]) => { const list = G.filter(g => g.hz === k);
+        return `<section class="box" aria-labelledby="g-${k}"><h3 id="g-${k}">${n}</h3>
+          ${list.length ? `<ul class="goals">${list.map(item).join("")}</ul>` : `<p class="empty">No goals here yet.</p>`}
+          <p style="margin:10px 0 0"><button class="btn quiet" data-add="${k}">Add a goal</button></p></section>`; }).join("")}${footer}`;
+  };
+  draw();
+  const goal = el => G.find(g => g.id === el.closest(".goal")?.dataset.id);
+  app.oninput = e => { const g = goal(e.target); if (!g) return; if (e.target.classList.contains("gt")) g.text = e.target.value; if (e.target.classList.contains("gs")) g.step = e.target.value; save(); };
+  app.onchange = e => { if (e.target.type !== "checkbox") return; const g = goal(e.target); g.done = e.target.checked; if (g.done) toast("Goal reached. Take a second to notice that."); save(); draw(); };
+  app.onclick = e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.add) { const g = { id: uid(), hz: b.dataset.add, text: "", step: "", done: false }; G.push(g); save(); draw(); return $(`[data-id="${g.id}"] .gt`).focus(); }
+    if (b.dataset.a === "del") { const g = goal(b); G.splice(G.indexOf(g), 1); save(); draw(); toast("Goal deleted"); }
+  };
+};
+
+// ---------- calm: check-in, breathing, grounding, safe list ----------
+views.calm = async () => {
+  await loadD();
+  const safe = Object.assign({ people: "", places: "", words: "" }, (await DB.get("safe")) || {});
+  const saveSafe = debounce(() => DB.set("safe", safe).then(() => toast("Saved")));
+  const sl = (k, n) => `<div class="slider"><label for="${k}">${n} <output id="${k}v" for="${k}">${D[k]} of 10</output></label>
+    <input id="${k}" type="range" min="0" max="10" value="${D[k]}" aria-valuetext="${D[k]} of 10"></div>`;
+  const senses = ["things I can see", "things I can touch", "things I can hear", "things I can smell", "thing I can taste"];
+  app.innerHTML = `${sec("Check in", dayNav())}
+    ${sl("mood", "Mood")}${sl("energy", "Energy")}${sl("safe", "How safe I feel right now")}
+    <section class="box" aria-labelledby="br"><h3 id="br">Box breathing</h3>
+      <p class="hint">In for 4, hold for 4, out for 4, hold for 4. Follow the circle.</p>
+      <div class="breathe"><div class="orb" id="orb"><b id="bcount" aria-hidden="true"></b></div>
+        <p id="bphase" aria-live="polite">Ready when you are</p>
+        <button class="btn aura" id="bgo">Start breathing</button></div></section>
+    <section class="box" aria-labelledby="gr"><h3 id="gr">5-4-3-2-1 grounding</h3>
+      <p class="hint">Name what's around you, right here and now.</p>
+      <div class="g5">${senses.map((s, i) => `<div class="field"><label for="g${i}">${5 - i} ${s}</label><input id="g${i}" data-g="${i}" value="${esc(D.ground[i])}" autocomplete="off"></div>`).join("")}</div></section>
+    <section class="box" aria-labelledby="wn"><h3 id="wn">Wins today</h3><p class="hint" id="wn-d">Small counts. Getting out of bed counts.</p>
+      <textarea class="lined" id="wins" aria-labelledby="wn" aria-describedby="wn-d" style="min-height:6rem">${esc(D.wins)}</textarea></section>
+    <section class="box" aria-labelledby="hp"><h3 id="hp">What was hard, what helped</h3>
+      <textarea class="lined" id="helped" aria-labelledby="hp" style="min-height:6rem">${esc(D.helped)}</textarea></section>
+    ${sec("My safe list", `<span class="eyebrow">Same every day</span>`)}
+    <p class="lede">Fill this in on a good day so it's ready on a hard one.</p>
+    <section class="box" aria-labelledby="sp"><h3 id="sp">People I can reach out to</h3>
+      <textarea class="lined" data-s="people" aria-labelledby="sp" style="min-height:6rem" placeholder="Name and how to reach them">${esc(safe.people)}</textarea></section>
+    <section class="box" aria-labelledby="sl"><h3 id="sl">Places and things that calm me</h3>
+      <textarea class="lined" data-s="places" aria-labelledby="sl" style="min-height:6rem" placeholder="A song, a walk, a weighted blanket, cold water on my face">${esc(safe.places)}</textarea></section>
+    <section class="box" aria-labelledby="sw"><h3 id="sw">What I tell myself in a hard moment</h3>
+      <textarea class="lined" data-s="words" aria-labelledby="sw" style="min-height:6rem" placeholder="This feeling is a memory. Right now I'm in my room, it's today, and I'm safe.">${esc(safe.words)}</textarea></section>${footer}`;
+  app.oninput = e => {
+    const el = e.target;
+    if (el.type === "range") { D[el.id] = +el.value; $(`#${el.id}v`).textContent = `${el.value} of 10`; el.setAttribute("aria-valuetext", `${el.value} of 10`); }
+    else if (el.dataset.g) D.ground[+el.dataset.g] = el.value;
+    else if (el.dataset.s) { safe[el.dataset.s] = el.value; return saveSafe(); }
+    else if (el.id === "wins" || el.id === "helped") D[el.id] = el.value;
+    else return;
+    saveD();
+  };
+  const phases = [["Breathe in", true], ["Hold", true], ["Breathe out", false], ["Hold", false]];
+  $("#bgo").onclick = () => {
+    const orb = $("#orb"), ph = $("#bphase"), cnt = $("#bcount"), b = $("#bgo");
+    if (breathH) { clearInterval(breathH); breathH = null; orb.classList.remove("in"); ph.textContent = "Nice work. Notice how you feel."; cnt.textContent = ""; b.textContent = "Start breathing"; return; }
+    let step = 0; b.textContent = "Stop";
+    const tick = () => {
+      const p = Math.floor(step / 4) % 4, n = 4 - step % 4;
+      if (step % 4 === 0) { ph.textContent = phases[p][0]; orb.classList.toggle("in", phases[p][1]); }
+      cnt.textContent = n; step++;
+    };
+    tick(); breathH = setInterval(tick, 1000);
+  };
+};
+
+// ---------- more: settings + your data ----------
+views.more = async () => {
+  const num = (k, n, min, max) => `<div class="field"><label for="s-${k}">${n}</label><input id="s-${k}" data-k="${k}" type="number" inputmode="numeric" min="${min}" max="${max}" value="${S[k]}"></div>`;
+  app.innerHTML = `${sec("Timer")}
+    ${num("focus", "Focus minutes", 1, 120)}${num("short", "Short break minutes", 1, 60)}${num("long", "Long break minutes", 1, 90)}${num("every", "Long break after", 2, 12)}
+    <div class="row"><label class="row" style="gap:0"><input type="checkbox" id="s-sound" ${S.sound ? "checked" : ""}>Soft chime when a timer ends</label>
+      <button class="btn quiet" id="test">Play chime</button></div>
+    ${sec("Planner hours")}
+    ${num("start", "Day starts at (0-23)", 0, 23)}${num("end", "Day ends at (0-23)", 0, 23)}
+    ${sec("Your data")}
+    <p>Everything lives in this browser on this device. A different device or browser won't have it, and clearing your browser's website data erases it. Save a backup now and then.</p>
+    <div class="row"><button class="btn" id="copy">Copy backup</button><button class="btn quiet" id="dl">Download backup</button>
+      <label class="btn quiet" for="imp" tabindex="0" id="impl">Restore from file</label><input type="file" id="imp" accept="application/json,.json" class="sr"></div>
+    <section class="box" aria-labelledby="pb"><h3 id="pb">Restore from pasted text</h3><p class="hint">Paste a backup you copied, then tap Restore. It replaces what's on this device now.</p>
+      <textarea class="lined" id="paste" aria-labelledby="pb" style="min-height:6rem"></textarea>
+      <div class="row"><button class="btn quiet" id="rp">Restore</button><span class="spacer"></span><button class="btn danger" id="wipe">Erase everything</button></div></section>
+    <p class="lede">Private by design: no accounts, no cookies, no analytics. To open it like an app on iPhone or iPad: in Safari, tap Share, then Add to Home Screen.</p>${footer}`;
+  app.onchange = async e => {
+    const el = e.target;
+    if (el.dataset.k) {
+      const min = +el.min, max = +el.max; let v = Math.round(+el.value); if (!(v >= min)) v = min; if (v > max) v = max; el.value = v;
+      S[el.dataset.k] = v; if (S.end < S.start) S.end = S.start;
+      if (!T.running && ["focus", "short", "long"].includes(el.dataset.k)) setMode(T.mode);
+    }
+    if (el.id === "s-sound") S.sound = el.checked;
+    if (el.id === "imp") { const f = el.files[0]; if (f) restore(await f.text()); return; }
+    await DB.set("settings", S); saveT(); toast("Saved");
+  };
+  const dump = async () => JSON.stringify({ app: "aura-planner", v: 1, at: new Date().toISOString(), data: await DB.all() });
+  $("#test").onclick = () => { try { AC ||= new (window.AudioContext || window.webkitAudioContext)(); AC.resume(); } catch {} const s = S.sound; S.sound = true; chime(); S.sound = s; };
+  $("#copy").onclick = async () => { const txt = await dump(); try { await navigator.clipboard.writeText(txt); toast("Backup copied. Paste it into a note to keep it."); } catch { $("#paste").value = txt; $("#paste").select(); toast("Couldn't copy. The backup is selected in the box below."); } };
+  $("#dl").onclick = async () => {
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([await dump()], { type: "application/json" }));
+    a.download = `aura-planner-backup-${today()}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast("If nothing downloaded, use Copy backup instead.");
+  };
+  $("#impl").onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $("#imp").click(); } };
+  armed($("#rp"), () => restore($("#paste").value));
+  armed($("#wipe"), async () => { await DB.clear(); S = { ...DEF }; T = { ...T, running: false, task: null, taskText: "", cycle: 0 }; setMode("focus"); toast("Everything erased"); cur = today(); location.hash = "today"; route(); });
+};
+async function restore(txt){
+  try {
+    const j = JSON.parse(txt);
+    if (j.app !== "aura-planner" || typeof j.data !== "object") throw 0;
+    await DB.clear();
+    for (const [k, v] of Object.entries(j.data)) await DB.set(k, v);
+    await boot(); toast("Backup restored"); location.hash = "today"; route();
+  } catch { toast("That isn't an aura planner backup. Use the text or file you saved from this page."); }
+}
+
+// ---------- start ----------
+async function boot(){
+  S = { ...DEF, ...((await DB.get("settings")) || {}) };
+  const saved = await DB.get("timer");
+  if (saved) T = { ...T, ...saved }; else setMode("focus");
+  if (T.day !== today()) { T.day = today(); T.cycle = 0; T.task = null; T.taskText = ""; }
+  if (T.running && Date.now() >= T.endAt) await finish(false); // finished while the page was closed
+}
+boot().then(route);
+</script>
+</body>
+</html>
