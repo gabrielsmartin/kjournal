@@ -133,6 +133,21 @@ footer.foot strong{color:var(--ink)}
 .hr.now{background:var(--tint);border-radius:10px;border-bottom-color:transparent}
 .hr.now .t{color:var(--r)}
 
+.hr{align-items:start}.hr .t{padding-top:16px}
+.pchip{display:flex;align-items:center;background:var(--card);border:1px solid var(--line-strong);border-radius:12px;margin:4px 0;min-height:44px;max-width:100%}
+.hr .pchip{background:var(--aura-line);border-color:transparent;color:var(--on-aura)}
+.pchip .ct{flex:1;min-width:0;border:0;background:none;padding:8px 8px 8px 0;font-size:1rem;color:inherit}
+.pchip.done .ct{text-decoration:line-through;opacity:.7}
+.grip{min-width:40px;min-height:44px;border:0;background:none;cursor:grab;touch-action:none;color:inherit;font-size:1.1rem;opacity:.75;padding:0}
+.ghost{position:fixed;left:0;top:0;z-index:30;pointer-events:none;box-shadow:0 10px 30px rgba(0,0,0,.25);margin:0}
+.lift{opacity:.35}
+.drop{border-radius:10px;transition:background .15s}
+.drop.over{background:var(--tint);outline:2px dashed var(--r);outline-offset:2px}
+.trayd{min-height:52px;padding:2px}
+.trayd .chips:empty::after{content:"Everything on your list has a time.";color:var(--mute);display:block;padding:10px 4px}
+.hd{padding:4px 0;min-width:0}
+.when{font-size:.72rem;font-weight:700;color:var(--r);background:var(--tint);border-radius:99px;padding:2px 8px;white-space:nowrap}
+
 /* goals */
 .goal{display:flex;align-items:flex-start;gap:4px;border-bottom:1px solid var(--line);padding:4px 0}
 .goal .gf{flex:1;min-width:0;display:grid}
@@ -336,7 +351,8 @@ async function route(){
   let v = location.hash.slice(1) || "today";
   if (!views[v]) v = "today";
   clearInterval(breathH); breathH = null;
-  app.oninput = app.onclick = app.onchange = app.onsubmit = null;
+  app.oninput = app.onclick = app.onchange = app.onsubmit = app.onkeydown = app.onpointerdown = app.onpointermove = app.onpointerup = app.onpointercancel = null;
+  document.querySelectorAll(".ghost").forEach(g => g.remove());
   route.cur = v;
   document.querySelectorAll("nav.tabs a").forEach(a => a.dataset.v === v ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"));
   await views[v]();
@@ -362,7 +378,7 @@ function renderTasks(){
     return `<li class="task${t.checked ? " done" : ""}${t.top && !t.checked ? " top" : ""}" data-id="${t.id}">
       <input type="checkbox" ${t.checked ? "checked" : ""} aria-label="Done: ${esc(t.text)}">
       <input class="tt" value="${esc(t.text)}" aria-label="Task" autocomplete="off">
-      <span class="acts">
+      ${t.hour != null ? `<span class="when">${fmtH(t.hour)}</span>` : ""}<span class="acts">
         <button class="ic" data-a="est" aria-label="${done} of ${est} pomodoros. Tap to change the plan."><span class="dots" aria-hidden="true">${dots}</span></button>
         <button class="ic star" data-a="top" aria-pressed="${!!t.top}" aria-label="Top 3">★</button>
         ${t.checked ? "" : `<button class="ic go" data-a="focus" aria-pressed="${T.task === t.id}">Focus</button>`}
@@ -412,7 +428,7 @@ views.today = async () => {
     if (b.id === "reset") { setMode(T.mode); saveT(); return updateClock(); }
     if (b.id === "skip") return finish(true);
     if (b.id === "carry") {
-      D.tasks.push(...carry.map(t => ({ ...t, id: uid(), done: 0 })));
+      D.tasks.push(...carry.map(t => ({ ...t, id: uid(), done: 0, hour: null })));
       y.carried = true; saveDay(addDays(cur, -1), y); saveD(); b.remove(); renderTasks(); return toast(`Brought over ${carry.length}`);
     }
     const t = task(b); if (!t) return;
@@ -429,24 +445,94 @@ views.today = async () => {
   };
 };
 
-// ---------- plan: hour by hour ----------
+// ---------- plan: hour by hour, with draggable tasks ----------
 views.plan = async () => {
   await loadD();
   const now = cur === today() ? new Date().getHours() : cur < today() ? 99 : -1;
   const hrs = []; for (let h = S.start; h <= S.end; h++) hrs.push(h);
-  const sugg = [...D.tasks.filter(t => !t.checked).map(t => t.text), "Break", "Eat", "Move", "Rest", "Wind down"];
+  const placed = t => t.hour != null && t.hour >= S.start && t.hour <= S.end;
+  const chip = t => `<div class="pchip${t.checked ? " done" : ""}" data-id="${t.id}">
+    <button class="grip" aria-label="Move task. Drag it, or use the up and down arrow keys. Escape sends it back to the list.">⠿</button>
+    <input class="ct" value="${esc(t.text)}" aria-label="Task" autocomplete="off" enterkeyhint="done"></div>`;
+  const sugg = ["Break", "Eat", "Move", "Rest", "Wind down"];
   app.innerHTML = `${sec("Hour by hour", dayNav())}
-    <p class="lede">Block out the day one hour at a time and leave some gaps. If the plan slips, it still helped you start.</p>
+    <section class="box" aria-labelledby="yl"><div class="bh"><h3 id="yl">Your list</h3><span class="eyebrow" id="trayn"></span></div>
+      <p class="hint">Drag a task by its handle onto an hour. Tap the text to edit it. Drag it back here to take it off the schedule.</p>
+      <div class="drop trayd" data-drop=""><div class="chips">${D.tasks.filter(t => !placed(t)).map(chip).join("")}</div></div>
+      <form id="addf" class="add" autocomplete="off"><label class="sr" for="addt">New task</label>
+        <input class="line" id="addt" placeholder="Add a task, then press Enter" enterkeyhint="done"><button class="btn">Add</button></form></section>
+    <p class="lede">Leave some gaps. If the plan slips, it still helped you start.</p>
     <datalist id="tl">${sugg.map(s => `<option value="${esc(s)}"></option>`).join("")}</datalist>
     <ol class="hours">${hrs.map(h => `<li class="hr${h === now ? " now" : ""}${h < now ? " past" : ""}">
       <label class="t" for="h${h}">${fmtH(h)}${h === now ? '<span class="sr"> (this hour)</span>' : ""}</label>
-      <input id="h${h}" data-h="${h}" list="tl" value="${esc(D.hours[h])}" autocomplete="off" placeholder="${h === now ? "Now" : ""}"></li>`).join("")}</ol>
+      <div class="drop hd" data-drop="${h}"><div class="chips">${D.tasks.filter(t => t.hour === h).map(chip).join("")}</div>
+        <input id="h${h}" data-h="${h}" list="tl" value="${esc(D.hours[h])}" autocomplete="off" placeholder="${h === now ? "Now" : "Note"}"></div></li>`).join("")}</ol>
     <section class="box" aria-labelledby="ft"><h3 id="ft">Tomorrow I'll start with</h3>
       <p class="hint" id="ft-d">One small first step. It shows up at the top of tomorrow's Today page.</p>
       <input class="line" id="first" aria-labelledby="ft" aria-describedby="ft-d" value="${esc(D.first)}" autocomplete="off" placeholder="Open the essay doc and write one sentence"></section>${footer}`;
+  const count = () => { const n = D.tasks.filter(t => !placed(t)).length; $("#trayn").textContent = D.tasks.length ? `${n} not placed` : ""; };
+  count();
+  const task = el => D.tasks.find(t => t.id === el.closest(".pchip")?.dataset.id);
+  const place = (el, h) => {
+    const t = task(el); t.hour = h === "" ? null : +h;
+    $(`[data-drop="${h}"] .chips`).appendChild(el);
+    saveD(); count();
+    toast(h === "" ? "Back on the list" : `Planned for ${fmtH(+h)}`);
+  };
   app.oninput = e => {
-    if (e.target.dataset.h) { D.hours[e.target.dataset.h] = e.target.value; saveD(); }
-    if (e.target.id === "first") { D.first = e.target.value; saveD(); }
+    const el = e.target;
+    if (el.dataset.h) { D.hours[el.dataset.h] = el.value; saveD(); }
+    if (el.id === "first") { D.first = el.value; saveD(); }
+    if (el.classList.contains("ct")) { task(el).text = el.value; saveD(); }
+  };
+  app.onsubmit = e => {
+    e.preventDefault(); const i = $("#addt"), v = i.value.trim(); if (!v) return;
+    const t = { id: uid(), text: v, est: 1, done: 0, checked: false, top: false, hour: null };
+    D.tasks.push(t); i.value = ""; saveD();
+    $(".trayd .chips").insertAdjacentHTML("beforeend", chip(t)); count(); i.focus();
+  };
+  // drag with a finger, pen, or mouse
+  let drag = null;
+  const over = () => {
+    const z = document.elementFromPoint(drag.x, drag.y)?.closest("[data-drop]");
+    if (z !== drag.over) { drag.over?.classList.remove("over"); z?.classList.add("over"); drag.over = z; }
+  };
+  const end = ok => {
+    if (!drag) return;
+    clearInterval(drag.scroll); drag.ghost.remove(); drag.el.classList.remove("lift"); drag.over?.classList.remove("over");
+    if (ok && drag.over) place(drag.el, drag.over.dataset.drop);
+    drag = null;
+  };
+  app.onpointermove = e => {
+    if (!drag) return;
+    drag.x = e.clientX; drag.y = e.clientY;
+    drag.ghost.style.transform = `translate(${e.clientX - drag.dx}px,${e.clientY - drag.dy}px)`;
+    over();
+  };
+  app.onpointerdown = e => {
+    const g = e.target.closest(".grip"); if (!g || drag) return;
+    e.preventDefault();
+    const el = g.closest(".pchip"), r = el.getBoundingClientRect(), ghost = el.cloneNode(true);
+    ghost.classList.add("ghost"); ghost.style.width = r.width + "px"; ghost.setAttribute("aria-hidden", "true");
+    document.body.appendChild(ghost); el.classList.add("lift");
+    drag = { el, ghost, dx: e.clientX - r.left, dy: e.clientY - r.top, x: e.clientX, y: e.clientY, over: null };
+    drag.scroll = setInterval(() => { const v = drag.y < 90 ? -14 : drag.y > innerHeight - 130 ? 14 : 0; if (v) { scrollBy(0, v); over(); } }, 16);
+    try { g.setPointerCapture(e.pointerId); } catch {}
+    app.onpointermove(e);
+  };
+  app.onpointerup = () => end(true);
+  app.onpointercancel = () => end(false);
+  // keyboard: arrows move a task between hours, Escape returns it to the list
+  app.onkeydown = e => {
+    if (e.key === "Enter" && e.target.classList.contains("ct")) return e.target.blur();
+    const g = e.target.closest(".grip"); if (!g) return;
+    const el = g.closest(".pchip"), t = task(el);
+    let h = placed(t) ? t.hour : null;
+    if (e.key === "ArrowDown") h = h == null ? (now >= S.start && now <= S.end ? now : S.start) : Math.min(S.end, h + 1);
+    else if (e.key === "ArrowUp") h = h == null || h <= S.start ? null : h - 1;
+    else if (e.key === "Escape") h = null;
+    else return;
+    e.preventDefault(); place(el, h == null ? "" : String(h)); g.focus(); el.scrollIntoView({ block: "nearest" });
   };
 };
 
